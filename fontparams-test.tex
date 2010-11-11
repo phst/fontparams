@@ -1,0 +1,132 @@
+\documentclass[pagesize=auto, version=last, paper=a3, DIV=15]{scrartcl}
+
+\providecommand*{\FontparamsTestFont}{ComputerModern}
+\providecommand*{\FontparamsTestSetup}{}
+
+\usepackage{hologo}
+\usepackage{booktabs}
+\usepackage{ifluatex}
+\usepackage{ifxetex}
+
+\ifxetex
+\usepackage{fontspec}
+\else\ifluatex
+\usepackage{fontspec}
+\else
+\usepackage[utf8]{inputenc}
+\fi\fi
+
+\FontparamsTestSetup
+
+\usepackage{fontparams}
+
+\newcommand*{\FontparamsRow}[1]{%
+  \ifcsname fontparams_get_#1:N\endcsname
+  #1
+  & \the\FontParameter{#1}{\displaystyle}
+  & \the\FontParameter{#1}{\crampeddisplaystyle}
+  & \the\FontParameter{#1}{\textstyle}
+  & \the\FontParameter{#1}{\crampedtextstyle}
+  & \the\FontParameter{#1}{\scriptstyle}
+  & \the\FontParameter{#1}{\crampedscriptstyle}
+  & \the\FontParameter{#1}{\scriptscriptstyle}
+  & \the\FontParameter{#1}{\crampedscriptscriptstyle}
+  \else
+  #1
+  \fi
+}
+
+\newcommand*{\FontparamsTable}{%
+  \begingroup
+  \footnotesize
+  \begin{tabular}{@{}lllllllll@{}}%
+    \toprule
+    Name & D & D’ & T & T’ & S & S’ & SS & SS’ \\
+    \midrule
+    \FontparamsRow{ScriptPercentScaleDown} \\
+    \FontparamsRow{ScriptScriptPercentScaleDown} \\
+    \FontparamsRow{DelimitedSubFormulaMinHeight} \\
+    \FontparamsRow{DisplayOperatorMinHeight} \\
+    \FontparamsRow{MathLeading} \\
+    \FontparamsRow{AxisHeight} \\
+    \FontparamsRow{AccentBaseHeight} \\
+    \FontparamsRow{FlattenedAccentBaseHeight} \\
+    \FontparamsRow{SubscriptShiftDown} \\
+    \FontparamsRow{SubscriptTopMax} \\
+    \FontparamsRow{SubscriptBaselineDropMin} \\
+    \FontparamsRow{SuperscriptShiftUp} \\
+    \FontparamsRow{SuperscriptShiftUpCramped} \\
+    \FontparamsRow{SuperscriptBottomMin} \\
+    \FontparamsRow{SuperscriptBaselineDropMax} \\
+    \FontparamsRow{SubSuperscriptGapMin} \\
+    \FontparamsRow{SuperscriptBottomMaxWithSubscript} \\
+    \FontparamsRow{SpaceAfterScript} \\
+    \FontparamsRow{UpperLimitGapMin} \\
+    \FontparamsRow{UpperLimitBaselineRiseMin} \\
+    \FontparamsRow{LowerLimitGapMin} \\
+    \FontparamsRow{LowerLimitBaselineDropMin} \\
+    \FontparamsRow{StackTopShiftUp} \\
+    \FontparamsRow{StackTopDisplayStyleShiftUp} \\
+    \FontparamsRow{StackBottomShiftDown} \\
+    \FontparamsRow{StackBottomDisplayStyleShiftDown} \\
+    \FontparamsRow{StackGapMin} \\
+    \FontparamsRow{StackDisplayStyleGapMin} \\
+    \FontparamsRow{StretchStackTopShiftUp} \\
+    \FontparamsRow{StretchStackBottomShiftDown} \\
+    \FontparamsRow{StretchStackGapAboveMin} \\
+    \FontparamsRow{StretchStackGapBelowMin} \\
+    \FontparamsRow{FractionNumeratorShiftUp} \\
+    \FontparamsRow{FractionNumeratorDisplayStyleShiftUp} \\
+    \FontparamsRow{FractionDenominatorShiftDown} \\
+    \FontparamsRow{FractionDenominatorDisplayStyleShiftDown} \\
+    \FontparamsRow{FractionNumeratorGapMin} \\
+    \FontparamsRow{FractionNumDisplayStyleGapMin} \\
+    \FontparamsRow{FractionRuleThickness} \\
+    \FontparamsRow{FractionDenominatorGapMin} \\
+    \FontparamsRow{FractionDenomDisplayStyleGapMin} \\
+    \FontparamsRow{SkewedFractionHorizontalGap} \\
+    \FontparamsRow{SkewedFractionVerticalGap} \\
+    \FontparamsRow{OverbarVerticalGap} \\
+    \FontparamsRow{OverbarRuleThickness} \\
+    \FontparamsRow{OverbarExtraAscender} \\
+    \FontparamsRow{UnderbarVerticalGap} \\
+    \FontparamsRow{UnderbarRuleThickness} \\
+    \FontparamsRow{UnderbarExtraDescender} \\
+    \FontparamsRow{RadicalVerticalGap} \\
+    \FontparamsRow{RadicalDisplayStyleVerticalGap} \\
+    \FontparamsRow{RadicalRuleThickness} \\
+    \FontparamsRow{RadicalExtraAscender} \\
+    \FontparamsRow{RadicalKernBeforeDegree} \\
+    \FontparamsRow{RadicalKernAfterDegree} \\
+    \FontparamsRow{RadicalDegreeBottomRaisePercent} \\
+    \FontparamsRow{FractionDelimiterSize} \\
+    \FontparamsRow{FractionDelimiterDisplaySize} \\
+    \FontparamsRow{SubscriptShiftDownWithSuperscript} \\
+    \FontparamsRow{MinConnectorOverlap} \\
+    \bottomrule
+  \end{tabular}%
+  \endgroup
+}
+
+\begingroup
+\edef\x{%
+  \endgroup
+  \noexpand\title{%
+    \noexpand\Hologo{%
+      \ifluatex Lua\else\ifxetex Xe\else pdf\fi\fi TeX%
+    }%
+    \ –\ \FontparamsTestFont
+  }%
+}
+\x
+
+\author{Auto-generated test file}
+
+
+\begin{document}
+
+\maketitle
+
+\FontparamsTable
+
+\end{document}
