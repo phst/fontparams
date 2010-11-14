@@ -18,3 +18,4 @@ auto/
 *.gls
 *.glg
 *.synctex.gz
+test-*.dat
