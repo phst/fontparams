@@ -19,3 +19,4 @@ auto/
 *.glg
 *.synctex.gz
 test-*.dat
+*.def

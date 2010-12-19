@@ -207,6 +207,29 @@
 \RequirePackage{l3keys2e}[2010/10/13]
 %    \end{macrocode}
 %
+% \subsection{Infrastructure}
+%
+% The stuff that doesn’t belong here.
+%
+% \begin{macro}{\fontparams_after_package:nn}
+%   The macro \cmd{\fontparams_after_package:nn}\marg{package}\marg{code}
+%   executes \meta{code} right now if the \LaTeXe\ package \meta{package} is
+%   already loaded, otherwise defers execution of \meta{code} until after
+%   \meta{package} has been loaded.
+%    \begin{macrocode}
+\@ifclassloaded { memoir } {
+  \cs_new_protected_nopar:Npn \fontparams_after_package:nn #1 #2 {
+    \RequireAtEndPackage { #1 } { #2 }
+  }
+} {
+  \RequirePackage { scrlfile } [ 2009/03/25 ]
+  \cs_new_protected_nopar:Npn \fontparams_after_package:nn #1 #2 {
+    \AfterPackage * { #1 } { #2 }
+  }
+}
+%    \end{macrocode}
+% \end{macro}
+%
 % \subsection{Helper macros for all engines}
 %
 % First a few common helper macros for the high-level interface.
@@ -480,6 +503,8 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \subsubsection{\Hologo{XeTeX}, OpenType math fonts}
+%
 % \Hologo{XeTeX} can use OpenType math fonts or TFM-based fonts.  We must
 % distinguish between these two kinds of fonts since the font dimension
 % interfaces are totally different: OpenType math fonts use the extended font
@@ -487,6 +512,323 @@
 % (and \hologo{pdfTeX}).  The font type must be given as package option or is
 % determined depending on whether the \pkg{unicode-math} package is loaded.
 %
+\begin{macro}{\fontparams_define_otf:Nnnnnnnn}
+%   The auxiliary macro
+%   \cmd{\fontparams_define_otf:Nnnnnnnn}\meta{\hologo{LuaTeX}
+%   command}\marg{Open\-Type
+%   names}\marg{prefix}\marg{postfix}\marg{$D$}\marg{$D'$}\marg{$T$}\marg{$T'$}
+%   creates the \meta{\hologo{LuaTeX} command} as a macro which expands to a
+%   \meta{dimen variable} if both \meta{prefix} and \meta{postfix} are empty.
+%   Otherwise, it is defined to be the concatenation of \meta{prefix}, a
+%   \meta{dimen variable} and \meta{postfix}, and \meta{prefix} and
+%   \meta{postfix} must be defined in such a way that the concatenation expands
+%   to either a \meta{number} or a \meta{dimen}.  The \meta{dimen} in both
+%   cases will be the extended font dimension of family~2, selected from the
+%   font dimension numbers \meta{$D$} (non-cramped display style), \meta{$D'$}
+%   (cramped display style), \meta{$T$} (non-cramped non-display styles) and
+%   \meta{$T'$} (cramped non-display styles), all of which must be
+%   \meta{number}s.  The macro is defined to take one \hologo{LuaTeX} style
+%   token (\cmd{\displaystyle}, \cmd{\crampeddisplaystyle} and so on) as
+%   argument, upon which the selection depends.  In addition, the macro
+%   \cmd{\fontparams_define_otf:Nnnnnnnn} defines \meta{OpenType names} to be
+%   valid arguments for \cmd{\FontParameter} and, if both \meta{prefix} and
+%   \meta{suffix} are empty, \cmd{\SetFontparameter}.
+%    \begin{macrocode}
+  \cs_new_protected_nopar:Npn
+  \fontparams_define_otf:Nnnnnnnn #1 #2 #3 #4 #5 #6 #7 #8 {
+    \cs_gnew_nopar:Npn #1 ##1 {
+%    \end{macrocode}
+% First insert the \meta{prefix}.
+%    \begin{macrocode}
+      #3
+%    \end{macrocode}
+% The main work is the mapping from the math styles to (font dimension number,
+% font) pairs.
+%    \begin{macrocode}
+      \tex_fontdimen:D
+      \cs_if_eq:NNTF \tex_displaystyle:D ##1 {
+        #5 \tex_textfont:D
+      } {
+        \cs_if_eq:NNTF \crampeddisplaystyle ##1 {
+          #6 \tex_textfont:D
+        } {
+          \cs_if_eq:NNTF \tex_textstyle:D ##1 {
+            #7 \tex_textfont:D
+          } {
+            \cs_if_eq:NNTF \crampedtextstyle ##1 {
+              #8 \tex_textfont:D
+            } {
+              \cs_if_eq:NNTF \tex_scriptstyle:D ##1 {
+                #7 \tex_scriptfont:D
+              } {
+                \cs_if_eq:NNTF \crampedscriptstyle ##1 {
+                  #8 \tex_scriptfont:D
+                } {
+                  \cs_if_eq:NNTF \tex_scriptscriptstyle:D ##1 {
+                    #7 \tex_scriptscriptfont:D
+                  } {
+                    \cs_if_eq:NNTF \crampedscriptscriptstyle ##1 {
+                      #8 \tex_scriptscriptfont:D
+                    } {
+                      \msg_error:nnx
+                        { fontparams } { unknown-style }
+                        { \token_to_str:N ##1 }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+%    \end{macrocode}
+% It is not clear which font family to choose.  We use family~2 here, in the
+% hope that the correct OpenType font is selected.
+%    \begin{macrocode}
+      \c_two
+%    \end{macrocode}
+% Lastly, we insert the \meta{postfix}.
+%    \begin{macrocode}
+      #4
+    }
+    \tl_if_empty:nTF { #3 #4 } {
+      \fontparams_create_accessors:nN { #2 } #1
+    } {
+      \fontparams_create_getters:nN { #2 } #1
+    }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsubsection{\Hologo{XeTeX} or \hologo{pdfTeX}, TFM-based fonts}
+%
+% This is the hardest part because we have to take composite font parameters
+% into account.  Therefore, the definitions can’t remain simple numbers, but
+% must allow for complicated expressions.  Generally, we use \meta{dimen expr}s
+% with certain replacements, as described above.
+%
+% \begin{macro}{\fontparams_if_simple_p:n}
+%   First a predicate to check whether a given definition is “simple.”  By this
+%   we mean a definiton which expands to a \meta{dimen variable} and can show
+%   up on the left-hand side of an assignment.  The predicate
+%   \cmd{\fontparams_if_simple_p:n}\marg{definition} uses a simple heuristic to
+%   determine whether the \meta{definition} is simple: if it contains a single
+%   token or matches the pattern \cmd{\sigma}\marg{anything} or
+%   \cmd{\xi}\marg{anything}, then it’s taken as simple.  This suffices for our
+%   purposes.
+%    \begin{macrocode}
+  \prg_new_conditional:Npnn \fontparams_if_simple:n #1 { p } {
+    \tl_if_single:nTF { #1 } {
+      \prg_return_true:
+    } {
+      \int_compare:nNnTF { \tl_elt_count:n { #1 } } = { \c_two } {
+        \tl_if_head_eq_meaning:nNTF { #1 } \sigma {
+          \prg_return_true:
+        } {
+          \tl_if_head_eq_meaning:nNTF { #1 } \xi {
+            \prg_return_true:
+          } {
+            \prg_return_false:
+          }
+        }
+      } {
+        \prg_return_false:
+      }
+    }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\fontparams_abs:n}
+%   The macro \cmd{\fontparams_abs:n}\marg{dimen} expands to another
+%   \meta{dimen} which resolves to the absolute value of the input
+%   \meta{dimen}.  Note that the definition is protected so that it gets
+%   expanded only when executed.
+%    \begin{macrocode}
+  \cs_new_protected_nopar:Npn \fontparams_abs:n #1 {
+    \dim_eval:n {
+      \dim_compare:nNnT { #1 } < { \c_zero_dim } { - } #1
+    }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\fontparams_define_tfm:Nnnnnn}
+%   The helper macro \cmd{\fontparams_define_tfm:Nnnnnn}\meta{\hologo{LuaTeX}
+%   command}\marg{Open\-Type names}\marg{$D$}\marg{$D'$}\marg{$T$}\marg{$T'$}
+%   defines the \meta{\hologo{LuaTeX} command} as a macro which accesses the
+%   simple or complex font parameter described by the defining expressions
+%   \meta{$D$}, \meta{$D'$}, \meta{$T$} and \meta{$T'$}, which must upon
+%   exhaustive expansion expand to valid \meta{dimen expr}s which are subject
+%   to the replacements defined above.  It also enables accessing through the
+%   \meta{OpenType names}: read-write access if all definitions resolve to a
+%   \meta{dimen variable}, read-only access otherwise.
+%    \begin{macrocode}
+  \cs_new_protected_nopar:Npn
+  \fontparams_define_tfm:Nnnnnn #1 #2 #3 #4 #5 #6 {
+%    \end{macrocode}
+% We do everything in a group because we want to overwrite \cmd{\abs},
+% \cmd{\sigma} and \cmd{\xi}.
+%    \begin{macrocode}
+    \group_begin:
+%    \end{macrocode}
+% First we check whether all definitions are simple.
+%    \begin{macrocode}
+    \bool_set:Nn \l_fontparams_simple_bool {
+      \fontparams_if_simple_p:n { #3 }
+      && \fontparams_if_simple_p:n { #4 }
+      && \fontparams_if_simple_p:n { #5 }
+      && \fontparams_if_simple_p:n { #6 }
+    }
+%    \end{macrocode}
+% We assign the correct expressions for each style in temporary token list
+% variables.  First the display and text styles.
+%    \begin{macrocode}
+    \cs_set_nopar:Npn \abs ##1 {
+      \fontparams_abs:n { ##1 }
+    }
+    \cs_set_nopar:Npn \sigma ##1 {
+      \tex_fontdimen:D ##1 \tex_textfont:D \c_two
+    }
+    \cs_set_nopar:Npn \xi ##1 {
+      \tex_fontdimen:D ##1 \tex_textfont:D \c_three
+    }
+    \tl_set:Nx \l_fontparams_display_tl { #3 }
+    \tl_set:Nx \l_fontparams_display_cramped_tl { #4 }
+    \tl_set:Nx \l_fontparams_text_tl { #5 }
+    \tl_set:Nx \l_fontparams_text_cramped_tl { #6 }
+%    \end{macrocode}
+% Next are the script and script-script styles.
+%    \begin{macrocode}
+    \cs_set_nopar:Npn \sigma ##1 {
+      \tex_fontdimen:D ##1 \tex_scriptfont:D \c_two
+    }
+    \cs_set_nopar:Npn \xi ##1 {
+      \tex_fontdimen:D ##1 \tex_scriptfont:D \c_three
+    }
+    \tl_set:Nx \l_fontparams_script_tl { #5 }
+    \tl_set:Nx \l_fontparams_script_cramped_tl { #6 }
+    \cs_set_nopar:Npn \sigma ##1 {
+      \tex_fontdimen:D ##1 \tex_scriptscriptfont:D \c_two
+    }
+    \cs_set_nopar:Npn \xi ##1 {
+      \tex_fontdimen:D ##1 \tex_scriptscriptfont:D \c_three
+    }
+    \tl_set:Nx \l_fontparams_scriptscript_tl { #5 }
+    \tl_set:Nx \l_fontparams_scriptscript_cramped_tl { #6 }
+%    \end{macrocode}
+% The main definition of the \meta{\hologo{LuaTeX} command} uses exhaustive
+% expansion, which requires us to insert \cmd{\exp_not} at various places.
+%    \begin{macrocode}
+    \cs_gnew_nopar:Npx #1 ##1 {
+%    \end{macrocode}
+% If the definitions aren’t simple, we surround everything by
+% a \cmd{\dim_eval:w} \dots\ \cmd{\dim_eval_end:} construct.
+%    \begin{macrocode}
+      \bool_if:NF \l_fontparams_simple_bool {
+        \exp_not:N \dim_eval:w
+      }
+%    \end{macrocode}
+% For the style switch we use the temporary token list variables defined above.
+%    \begin{macrocode}
+      \exp_not:n {
+        \cs_if_eq:NNTF \tex_displaystyle:D
+      } ##1 {
+        \l_fontparams_display_tl
+      } {
+        \exp_not:n {
+          \cs_if_eq:NNTF \crampeddisplaystyle
+        } ##1 {
+          \l_fontparams_display_cramped_tl
+        } {
+          \exp_not:n {
+            \cs_if_eq:NNTF \tex_textstyle:D
+          } ##1 {
+            \l_fontparams_text_tl
+          } {
+            \exp_not:n {
+              \cs_if_eq:NNTF \crampedtextstyle
+            } ##1 {
+              \l_fontparams_text_cramped_tl
+            } {
+              \exp_not:n {
+                \cs_if_eq:NNTF \tex_scriptstyle:D
+              } ##1 {
+                \l_fontparams_script_tl
+              } {
+                \exp_not:n {
+                  \cs_if_eq:NNTF \crampedscriptstyle
+                } ##1 {
+                  \l_fontparams_script_cramped_tl
+                } {
+                  \exp_not:n {
+                    \cs_if_eq:NNTF \tex_scriptscriptstyle:D
+                  } ##1 {
+                    \l_fontparams_scriptscript_tl
+                  } {
+                    \exp_not:n {
+                      \cs_if_eq:NNTF \crampedscriptscriptstyle
+                    } ##1 {
+                      \l_fontparams_scriptscript_cramped_tl
+                    } {
+                      \msg_error:nnx
+                        { fontparams } { unknown-style }
+                        { \exp_not:N \token_to_str:N ##1 }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+%    \end{macrocode}
+% We have to close the \cmd{\dim_eval:w} construction by a matching
+% \cmd{\dim_eval_end:} command.
+%    \begin{macrocode}
+      \bool_if:NF \l_fontparams_simple_bool {
+        \dim_eval_end:
+      }
+    }
+    \bool_if:NTF \l_fontparams_simple_bool {
+      \fontparams_create_accessors:nN { #2 } #1
+    } {
+      \fontparams_create_getters:nN { #2 } #1
+    }
+    \group_end:
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\fontparams_new_aux_i:nNnnnn}
+% \begin{macro}{\fontparams_new:nNnnnnnnnn}
+%   For the main factory command we have to use a two-stage approach to grab
+%   the required arguments.
+%    \begin{macrocode}
+  \cs_new_protected_nopar:Npn
+  \fontparams_new_aux_i:nNnnnn #1 #2 #3 #4 #5 #6 {
+    \tl_if_empty:nF { #3 #4 #5 #6 } {
+      \fontparams_make_public_or_private:NN
+        \fontparams_new_aux_ii:Nnnnnn #2 { #1 } 
+        { #3 } { #4 } { #5 } { #6 }
+    }
+  }
+  \cs_new_protected_nopar:Npn
+  \fontparams_new:nNnnnnnnnn #1 #2 #3 #4 #5 #6 {
+    \fontparams_new_aux_i:nNnnnn { #1 } #2
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\fontparams_new_int:nNn}
+%   The integer parameters don’t exist for TFM-based fonts, so we just gobble
+%   arguments here.
+%    \begin{macrocode}
+  \cs_new_eq:NN \fontparams_new_int:nNn \use_none:nnn
+}
+%    \end{macrocode}
+% \end{macro}
 % \begin{macro}{\g_fontparams_xetex_otf_bool}
 %   A global Boolean variable that is only true if \hologo{XeTeX} is the
 %   current engine and an OpenType math font will be used.
@@ -519,99 +861,9 @@
 %    \end{macrocode}
 % \end{macro}
 %
-% \subsubsection{\Hologo{XeTeX}, OpenType math fonts}
-%
 %    \begin{macrocode}
   \bool_if:NTF \g_fontparams_xetex_otf_bool {
 %    \end{macrocode}
-%
-% \begin{macro}{\fontparams_new_aux:Nnnnnnnn}
-%   The auxiliary macro
-%   \cmd{\fontparams_new_aux:Nnnnnnnn}\meta{\hologo{LuaTeX}
-%   command}\marg{Open\-Type
-%   names}\marg{prefix}\marg{postfix}\marg{$D$}\marg{$D'$}\marg{$T$}\marg{$T'$}
-%   creates the \meta{\hologo{LuaTeX} command} as a macro which expands to a
-%   \meta{dimen variable} if both \meta{prefix} and \meta{postfix} are empty.
-%   Otherwise, it is defined to be the concatenation of \meta{prefix}, a
-%   \meta{dimen variable} and \meta{postfix}, and \meta{prefix} and
-%   \meta{postfix} must be defined in such a way that the concatenation expands
-%   to either a \meta{number} or a \meta{dimen}.  The \meta{dimen} in both
-%   cases will be the extended font dimension of family~2, selected from the
-%   font dimension numbers \meta{$D$} (non-cramped display style), \meta{$D'$}
-%   (cramped display style), \meta{$T$} (non-cramped non-display styles) and
-%   \meta{$T'$} (cramped non-display styles), all of which must be
-%   \meta{number}s.  The macro is defined to take one \hologo{LuaTeX} style
-%   token (\cmd{\displaystyle}, \cmd{\crampeddisplaystyle} and so on) as
-%   argument, upon which the selection depends.  In addition, the macro
-%   \cmd{\fontparams_new_aux:Nnnnnnnn} defines \meta{OpenType names} to be
-%   valid arguments for \cmd{\FontParameter} and, if both \meta{prefix} and
-%   \meta{suffix} are empty, \cmd{\SetFontparameter}.
-%    \begin{macrocode}
-    \cs_new_protected_nopar:Npn
-    \fontparams_new_aux:Nnnnnnnn #1 #2 #3 #4 #5 #6 #7 #8 {
-      \cs_gnew_nopar:Npn #1 ##1 {
-%    \end{macrocode}
-% First insert the \meta{prefix}.
-%    \begin{macrocode}
-        #3
-%    \end{macrocode}
-% The main work is the mapping from the math styles to (font dimension number,
-% font) pairs.
-%    \begin{macrocode}
-        \tex_fontdimen:D
-        \cs_if_eq:NNTF \tex_displaystyle:D ##1 {
-          #5 \tex_textfont:D
-        } {
-          \cs_if_eq:NNTF \crampeddisplaystyle ##1 {
-            #6 \tex_textfont:D
-          } {
-            \cs_if_eq:NNTF \tex_textstyle:D ##1 {
-              #7 \tex_textfont:D
-            } {
-              \cs_if_eq:NNTF \crampedtextstyle ##1 {
-                #8 \tex_textfont:D
-              } {
-                \cs_if_eq:NNTF \tex_scriptstyle:D ##1 {
-                  #7 \tex_scriptfont:D
-                } {
-                  \cs_if_eq:NNTF \crampedscriptstyle ##1 {
-                    #8 \tex_scriptfont:D
-                  } {
-                    \cs_if_eq:NNTF \tex_scriptscriptstyle:D ##1 {
-                      #7 \tex_scriptscriptfont:D
-                    } {
-                      \cs_if_eq:NNTF \crampedscriptscriptstyle ##1 {
-                        #8 \tex_scriptscriptfont:D
-                      } {
-                        \msg_error:nnx
-                          { fontparams } { unknown-style }
-                          { \token_to_str:N ##1 }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-%    \end{macrocode}
-% It is not clear which font family to choose.  We use family~2 here, in the
-% hope that the correct OpenType font is selected.
-%    \begin{macrocode}
-        \c_two
-%    \end{macrocode}
-% Lastly, we insert the \meta{postfix}.
-%    \begin{macrocode}
-        #4
-      }
-      \tl_if_empty:nTF { #3 #4 } {
-        \fontparams_create_accessors:nN { #2 } #1
-      } {
-        \fontparams_create_getters:nN { #2 } #1
-      }
-    }
-%    \end{macrocode}
-% \end{macro}
 %
 % \begin{macro}{\fontparams_new:nNnnnnnnnn}
 %   The main factory macro for \meta{dimen} parameters simply delegates to the
@@ -622,7 +874,7 @@
     \fontparams_new:nNnnnnnnnn #1 #2 #3 #4 #5 #6 {
       \tl_if_empty:nF { #3 #4 #5 #6 } {
         \fontparams_make_public_or_private:NN
-          \fontparams_new_aux:Nnnnnnnn #2 { #1 } { } { }
+          \fontparams_define_tfm:Nnnnnnnn #2 { #1 } { } { }
           { #3 } { #4 } { #5 } { #6 }
       }
       \use_none:nnnn
@@ -641,245 +893,11 @@
     \cs_new_protected_nopar:Npn \fontparams_new_int:nNn #1 #2 #3 {
       \tl_if_empty:nF { #3 } {
         \fontparams_make_public_or_private:NN
-          \fontparams_new_aux:Nnnnnnnn
+          \fontparams_define_tfm:Nnnnnnnn
           #2 { #1 } { \int_eval:w } { \int_eval_end: }
           { #3 } { #3 } { #3 } { #3 }
       }
     }
-  } {
-%    \end{macrocode}
-% \end{macro}
-%
-% \subsubsection{\Hologo{XeTeX} or \hologo{pdfTeX}, TFM-based fonts}
-%
-% This is the hardest part because we have to take composite font parameters
-% into account.  Therefore, the definitions can’t remain simple numbers, but
-% must allow for complicated expressions.  Generally, we use \meta{dimen expr}s
-% with certain replacements, as described above.
-%
-% \begin{macro}{\fontparams_if_simple_p:n}
-%   First a predicate to check whether a given definition is “simple.”  By this
-%   we mean a definiton which expands to a \meta{dimen variable} and can show
-%   up on the left-hand side of an assignment.  The predicate
-%   \cmd{\fontparams_if_simple_p:n}\marg{definition} uses a simple heuristic to
-%   determine whether the \meta{definition} is simple: if it contains a single
-%   token or matches the pattern \cmd{\sigma}\marg{anything} or
-%   \cmd{\xi}\marg{anything}, then it’s taken as simple.  This suffices for our
-%   purposes.
-%    \begin{macrocode}
-    \prg_new_conditional:Npnn \fontparams_if_simple:n #1 { p } {
-      \tl_if_single:nTF { #1 } {
-        \prg_return_true:
-      } {
-        \int_compare:nNnTF { \tl_elt_count:n { #1 } } = { \c_two } {
-          \tl_if_head_eq_meaning:nNTF { #1 } \sigma {
-            \prg_return_true:
-          } {
-            \tl_if_head_eq_meaning:nNTF { #1 } \xi {
-              \prg_return_true:
-            } {
-              \prg_return_false:
-            }
-          }
-        } {
-          \prg_return_false:
-        }
-      }
-    }
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\fontparams_abs:n}
-%   The macro \cmd{\fontparams_abs:n}\marg{dimen} expands to another
-%   \meta{dimen} which resolves to the absolute value of the input
-%   \meta{dimen}.  Note that the definition is protected so that it gets
-%   expanded only when executed.
-%    \begin{macrocode}
-    \cs_new_protected_nopar:Npn \fontparams_abs:n #1 {
-      \dim_eval:n {
-        \dim_compare:nNnT { #1 } < { \c_zero_dim } { - } #1
-      }
-    }
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\fontparams_new_aux_ii:Nnnnnn}
-%   The helper macro \cmd{\fontparams_new_aux_ii:Nnnnnn}\meta{\hologo{LuaTeX}
-%   command}\marg{Open\-Type names}\marg{$D$}\marg{$D'$}\marg{$T$}\marg{$T'$}
-%   defines the \meta{\hologo{LuaTeX} command} as a macro which accesses the
-%   simple or complex font parameter described by the defining expressions
-%   \meta{$D$}, \meta{$D'$}, \meta{$T$} and \meta{$T'$}, which must upon
-%   exhaustive expansion expand to valid \meta{dimen expr}s which are subject
-%   to the replacements defined above.  It also enables accessing through the
-%   \meta{OpenType names}: read-write access if all definitions resolve to a
-%   \meta{dimen variable}, read-only access otherwise.
-%    \begin{macrocode}
-    \cs_new_protected_nopar:Npn
-    \fontparams_new_aux_ii:Nnnnnn #1 #2 #3 #4 #5 #6 {
-%    \end{macrocode}
-% We do everything in a group because we want to overwrite \cmd{\abs},
-% \cmd{\sigma} and \cmd{\xi}.
-%    \begin{macrocode}
-      \group_begin:
-%    \end{macrocode}
-% First we check whether all definitions are simple.
-%    \begin{macrocode}
-      \bool_set:Nn \l_fontparams_simple_bool {
-        \fontparams_if_simple_p:n { #3 }
-        && \fontparams_if_simple_p:n { #4 }
-        && \fontparams_if_simple_p:n { #5 }
-        && \fontparams_if_simple_p:n { #6 }
-      }
-%    \end{macrocode}
-% We assign the correct expressions for each style in temporary token list
-% variables.  First the display and text styles.
-%    \begin{macrocode}
-      \cs_set_nopar:Npn \abs ##1 {
-        \fontparams_abs:n { ##1 }
-      }
-      \cs_set_nopar:Npn \sigma ##1 {
-        \tex_fontdimen:D ##1 \tex_textfont:D \c_two
-      }
-      \cs_set_nopar:Npn \xi ##1 {
-        \tex_fontdimen:D ##1 \tex_textfont:D \c_three
-      }
-      \tl_set:Nx \l_fontparams_display_tl { #3 }
-      \tl_set:Nx \l_fontparams_display_cramped_tl { #4 }
-      \tl_set:Nx \l_fontparams_text_tl { #5 }
-      \tl_set:Nx \l_fontparams_text_cramped_tl { #6 }
-%    \end{macrocode}
-% Next are the script and script-script styles.
-%    \begin{macrocode}
-      \cs_set_nopar:Npn \sigma ##1 {
-        \tex_fontdimen:D ##1 \tex_scriptfont:D \c_two
-      }
-      \cs_set_nopar:Npn \xi ##1 {
-        \tex_fontdimen:D ##1 \tex_scriptfont:D \c_three
-      }
-      \tl_set:Nx \l_fontparams_script_tl { #5 }
-      \tl_set:Nx \l_fontparams_script_cramped_tl { #6 }
-      \cs_set_nopar:Npn \sigma ##1 {
-        \tex_fontdimen:D ##1 \tex_scriptscriptfont:D \c_two
-      }
-      \cs_set_nopar:Npn \xi ##1 {
-        \tex_fontdimen:D ##1 \tex_scriptscriptfont:D \c_three
-      }
-      \tl_set:Nx \l_fontparams_scriptscript_tl { #5 }
-      \tl_set:Nx \l_fontparams_scriptscript_cramped_tl { #6 }
-%    \end{macrocode}
-% The main definition of the \meta{\hologo{LuaTeX} command} uses exhaustive
-% expansion, which requires us to insert \cmd{\exp_not} at various places.
-%    \begin{macrocode}
-      \cs_gnew_nopar:Npx #1 ##1 {
-%    \end{macrocode}
-% If the definitions aren’t simple, we surround everything by
-% a \cmd{\dim_eval:w} \dots\ \cmd{\dim_eval_end:} construct.
-%    \begin{macrocode}
-        \bool_if:NF \l_fontparams_simple_bool {
-          \exp_not:N \dim_eval:w
-        }
-%    \end{macrocode}
-% For the style switch we use the temporary token list variables defined above.
-%    \begin{macrocode}
-        \exp_not:n {
-          \cs_if_eq:NNTF \tex_displaystyle:D
-        } ##1 {
-          \l_fontparams_display_tl
-        } {
-          \exp_not:n {
-            \cs_if_eq:NNTF \crampeddisplaystyle
-          } ##1 {
-            \l_fontparams_display_cramped_tl
-          } {
-            \exp_not:n {
-              \cs_if_eq:NNTF \tex_textstyle:D
-            } ##1 {
-              \l_fontparams_text_tl
-            } {
-              \exp_not:n {
-                \cs_if_eq:NNTF \crampedtextstyle
-              } ##1 {
-                \l_fontparams_text_cramped_tl
-              } {
-                \exp_not:n {
-                  \cs_if_eq:NNTF \tex_scriptstyle:D
-                } ##1 {
-                  \l_fontparams_script_tl
-                } {
-                  \exp_not:n {
-                    \cs_if_eq:NNTF \crampedscriptstyle
-                  } ##1 {
-                    \l_fontparams_script_cramped_tl
-                  } {
-                    \exp_not:n {
-                      \cs_if_eq:NNTF \tex_scriptscriptstyle:D
-                    } ##1 {
-                      \l_fontparams_scriptscript_tl
-                    } {
-                      \exp_not:n {
-                        \cs_if_eq:NNTF \crampedscriptscriptstyle
-                      } ##1 {
-                        \l_fontparams_scriptscript_cramped_tl
-                      } {
-                        \msg_error:nnx
-                          { fontparams } { unknown-style }
-                          { \exp_not:N \token_to_str:N ##1 }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-%    \end{macrocode}
-% We have to close the \cmd{\dim_eval:w} construction by a matching
-% \cmd{\dim_eval_end:} command.
-%    \begin{macrocode}
-        \bool_if:NF \l_fontparams_simple_bool {
-          \dim_eval_end:
-        }
-      }
-      \bool_if:NTF \l_fontparams_simple_bool {
-        \fontparams_create_accessors:nN { #2 } #1
-      } {
-        \fontparams_create_getters:nN { #2 } #1
-      }
-      \group_end:
-    }
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\fontparams_new_aux_i:nNnnnn}
-% \begin{macro}{\fontparams_new:nNnnnnnnnn}
-%   For the main factory command we have to use a two-stage approach to grab
-%   the required arguments.
-%    \begin{macrocode}
-    \cs_new_protected_nopar:Npn
-    \fontparams_new_aux_i:nNnnnn #1 #2 #3 #4 #5 #6 {
-      \tl_if_empty:nF { #3 #4 #5 #6 } {
-        \fontparams_make_public_or_private:NN
-          \fontparams_new_aux_ii:Nnnnnn #2 { #1 } 
-          { #3 } { #4 } { #5 } { #6 }
-      }
-    }
-    \cs_new_protected_nopar:Npn
-    \fontparams_new:nNnnnnnnnn #1 #2 #3 #4 #5 #6 {
-      \fontparams_new_aux_i:nNnnnn { #1 } #2
-    }
-%    \end{macrocode}
-% \end{macro}
-% \end{macro}
-%
-% \begin{macro}{\fontparams_new_int:nNn}
-%   The integer parameters don’t exist for TFM-based fonts, so we just gobble
-%   arguments here.
-%    \begin{macrocode}
-    \cs_new_eq:NN \fontparams_new_int:nNn \use_none:nnn
-  }
-}
-%    \end{macrocode}
-% \end{macro}
 %
 % \subsection{Helper factory macros}
 %
