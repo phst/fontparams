@@ -1,120 +1,168 @@
+#!/usr/bin/env lua
+
 require("fontparams-data")
+require("fontparams-compile")
+
+local tpl_font_get_dimen = [[
+  \fontdimen %s #1]]
+
+local tpl_font_get_int = [[
+  \numexpr \fontdimen %s #1 \relax]]
+
+local function format_font_get(vtype, def)
+   local value = def.nondisplay.noncramped
+   local number = fontparams.compile.int_const(value)
+   if vtype == "dimen" then
+      return tpl_font_get_dimen:format(number)
+   else
+      return tpl_font_get_int:format(number)
+   end
+end
+
+local tpl_font_set_dimen = [[
+  \fontdimen %s #1 \dimexpr #2 \relax]]
+
+local tpl_font_set_int = [[
+  \fontdimen %s #1 \dimexpr \number \numexpr #2 \relax sp \relax]]
+
+local function format_font_set(vtype, def)
+   local value = def.nondisplay.noncramped
+   local number = fontparams.compile.int_const(value)
+   if vtype == "dimen" then
+      return tpl_font_set_dimen:format(number)
+   else
+      return tpl_font_set_int:format(number)
+   end
+end
+
+local tpl_font_macros = [[
+\cs_set_protected_nopar:Npn \fontparams_font_get_%s:N #1 {
+%s
+}
+\cs_set_protected_nopar:Npn \fontparams_font_set_%s:Nn #1 #2 {
+%s
+}
+]]
+
+local function format_font_macros(name, vtype, def)
+   local get = format_font_get(vtype, def)
+   local set = format_font_set(vtype, def)
+   return tpl_font_macros:format(name, get, name, set)
+end
+
+local tpl_style_simple = [[
+  \fontdimen %s \textfont \c_two]]
+
+local tpl_style_complex = [[
+  \fontdimen
+  \cs_if_eq:NNTF #1 \displaystyle { %s \textfont } {
+    \cs_if_eq:NNTF #1 \crampeddisplaystyle { %s \textfont } {
+      \cs_if_eq:NNTF #1 \textstyle { %s \textfont } {
+        \cs_if_eq:NNTF #1 \crampedtextstyle { %s \textfont } {
+          \cs_if_eq:NNTF #1 \scriptstyle { %s \scriptfont } {
+            \cs_if_eq:NNTF #1 \crampedscriptstyle { %s \scriptfont } {
+              \cs_if_eq:NNTF #1 \scriptscriptstyle { %s \scriptscriptfont } {
+                \cs_if_eq:NNTF #1 \crampedscriptscriptstyle { %s \scriptscriptfont } {
+                  \msg_error:nnx { fontparams } { unknown-style } { \token_to_str:N #1 }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  \c_two]]
+
+local function format_style_expr(def)
+   local simple = fontparams.compile.is_simple(def)
+   local nn = fontparams.compile.int_const(def.nondisplay.noncramped)
+   if simple then
+      return tpl_style_simple:format(nn)
+   else
+      local yy = fontparams.compile.int_const(def.display.cramped)
+      local yn = fontparams.compile.int_const(def.display.noncramped)
+      local ny = fontparams.compile.int_const(def.nondisplay.cramped)
+      return tpl_style_complex:format(yn, yy, nn, ny, nn, ny, nn, ny)
+   end
+end
+
+local tpl_style_get_dimen = "%s"
+
+local tpl_style_get_int = [[
+  \numexpr
+%s
+  \relax]]
+
+local function format_style_get(vtype, expr)
+   if vtype == "dimen" then
+      return tpl_style_get_dimen:format(expr)
+   else
+      return tpl_style_get_int:format(expr)
+   end
+end
+
+local tpl_style_set_dimen = [[
+%s
+  \dimexpr #2 \relax]]
+
+local tpl_style_set_int = [[
+%s
+  \dimexpr \number \numexpr #2 \relax sp \relax]]
+
+local function format_style_set(vtype, expr)
+   if vtype == "dimen" then
+      return tpl_style_set_dimen:format(expr)
+   else
+      return tpl_style_set_int:format(expr)
+   end
+end
+
+local tpl_style_macros = [[
+\cs_set_protected_nopar:Npn \fontparams_style_get_%s:N #1 {
+%s
+}
+\cs_set_protected_nopar:Npn \fontparams_style_set_%s:Nn #1 #2 {
+%s
+}
+]]
+
+local function format_style_macros(name, vtype, expr)
+   local get = format_style_get(vtype, expr)
+   local set = format_style_set(vtype, expr)
+   return tpl_style_macros:format(name, get, name, set)
+end
+
+local tpl_primitive_macro = [[
+\cs_set_protected_nopar:Npn \%s #1 {
+%s
+}
+]]
+
+local function format_primitive_macro(name, vtype, expr)
+   local get = format_style_get(vtype, expr)
+   return tpl_primitive_macro:format(name, get)
+end
+
+local primitives = { }
 
 io.output("fontparams-xetex.def")
 
 for key, value in pairs(fontparams.data.params) do
-   local raw = value.xetex
-   if raw then
-      local simple = type(raw) == "number"
-      local def
-      if simple then
-         def = {
-            display = {
-               cramped = raw,
-               noncramped = raw
-            },
-            nondisplay = {
-               cramped = raw,
-               noncramped = raw
-            }
-         }
-      else
-         def = {
-            display = { },
-            nondisplay = { }
-         }
-         if raw.display then
-            if type(raw.display) == "number" then
-               def.display = {
-                  cramped = raw.display,
-                  noncramped = raw.display
-               }
-            else
-               def.display = {
-                  cramped = raw.display.cramped or raw.cramped,
-                  noncramped = raw.display.noncramped or raw.noncramped
-               }
-            end
-         else
-            def.display = raw
-         end
-         if raw.nondisplay then
-            if type(raw.nondisplay) == "number" then
-               def.nondisplay = {
-                  cramped = raw.nondisplay,
-                  noncramped = raw.nondisplay
-               }
-            else
-               def.nondisplay = {
-                  cramped = raw.nondisplay.cramped or raw.cramped,
-                  noncramped = raw.nondisplay.noncramped or raw.noncramped
-               }
-            end
-         else
-            def.nondisplay = raw
-         end
-      end
+   local def = fontparams.compile.inflate(value.xetex)
+   if def then
       local primitive = value.luatex
       local vtype = value.type or "dimen"
-      if primitive then
-         io.write("\\cs_set_protected_nopar:Npn \\" .. primitive .. " #1 {\n")
-         if vtype == "int" then
-            io.write("  \\numexpr\n")
+      local satellite = value.satellite or false
+      local expr = format_style_expr(def)
+      io.write(format_font_macros(key, vtype, def))
+      io.write(format_style_macros(key, vtype, expr))
+      if primitive and not satellite then
+         if primitives[primitive] then
+            error(string.format([[Primitive \%s defined twice]], primitive))
          end
-         if simple then
-            io.write("  \\fontdimen " .. def.nondisplay.noncramped .. " \\textfont \\c_two \n")
-         else
-            io.write("  \\fontdimen \n"
-                     .. "  \\cs_if_eq:NNTF #1 \\displaystyle { " .. def.display.noncramped .. " \\textfont } {\n"
-                     .. "    \\cs_if_eq:NNTF #1 \\crampeddisplaystyle { " .. def.display.cramped .. " \\textfont } {\n"
-                     .. "      \\cs_if_eq:NNTF #1 \\textstyle { " .. def.nondisplay.noncramped .. " \\textfont } {\n"
-                     .. "        \\cs_if_eq:NNTF #1 \\crampedtextstyle { " .. def.nondisplay.cramped .. " \\textfont } {\n"
-                     .. "          \\cs_if_eq:NNTF #1 \\scriptstyle { " .. def.nondisplay.noncramped .. " \\scriptfont } {\n"
-                     .. "            \\cs_if_eq:NNTF #1 \\crampedscriptstyle { " .. def.nondisplay.cramped .. " \\scriptfont } {\n"
-                     .. "              \\cs_if_eq:NNTF #1 \\scriptscriptstyle { " .. def.nondisplay.noncramped .. " \\scriptscriptfont } {\n"
-                     .. "                \\cs_if_eq:NNTF #1 \\crampedscriptscriptstyle { " .. def.nondisplay.cramped .. " \\scriptscriptfont } {\n"
-                     .. "                  \\msg_error:nnx { fontparams } { unknown-style } { \\token_to_str:N #1 }\n"
-                     .. "                }\n"
-                     .. "              }\n"
-                     .. "            }\n"
-                     .. "          }\n"
-                     .. "        }\n"
-                     .. "      }\n"
-                     .. "    }\n"
-                     .. "  }\n"
-                     .. "  \\c_two \n")
-         end
-         if vtype == "int" then
-            io.write("  \\relax\n")
-         end
-         io.write("}\n")
-      end
-      if vtype == "int" then
-         io.write("\\cs_set_protected_nopar:Npn \\fontparams_font_get_" .. key .. ":N #1 {\n"
-                  .. "  \\numexpr\n"
-                  .. "  \\fontdimen " .. def.nondisplay.noncramped .. " #1\n"
-                  .. "  \\relax\n"
-                  .. "}\n")
-         io.write("\\cs_set_protected_nopar:Npn \\fontparams_font_set_" .. key .. ":Nn #1 #2 {\n"
-                  .. "  \\fontdimen " .. def.nondisplay.noncramped .. " #1 \\dimexpr \\numexpr #2 \\relax sp \\relax\n"
-                  .. "}\n")
-      else
-         io.write("\\cs_set_protected_nopar:Npn \\fontparams_font_get_" .. key .. ":N #1 {\n"
-                  .. "  \\fontdimen " .. def.nondisplay.noncramped .. " #1\n"
-                  .. "}\n")
-         io.write("\\cs_set_protected_nopar:Npn \\fontparams_font_set_" .. key .. ":Nn #1 #2 {\n"
-                  .. "  \\fontdimen " .. def.nondisplay.noncramped .. " #1 \\dimexpr #2 \\relax\n"
-                  .. "}\n")
-      end
-      if primitive then
-         io.write("\\cs_set_protected_nopar:Npn \\fontparams_style_get_" .. key .. ":N #1 {\n"
-                  .. "  \\" .. primitive .. " #1\n"
-                  .. "}\n")
-         if vtype == "dimen" then
-            io.write("\\cs_set_protected_nopar:Npm \\fontparams_style_set_" .. key .. ":Nn #1 #2 {\n"
-                     .. "  \\" .. primitive .. " #1 \\dimexpr #2 \\relax\n"
-                     .. "}\n")
-         end
+         io.write(format_primitive_macro(primitive, vtype, expr))
+         primitives[primitive] = true
       end
    end
 end

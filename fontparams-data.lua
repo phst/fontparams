@@ -38,7 +38,11 @@ params = {
    SubscriptTopMax = {
       luatex = "Umathsubtopmax",
       xetex = 19,
-      pdftex = "0.8 abs(sigma(5))"
+      pdftex = {
+         number = 5,
+         absolute = true,
+         factor = 0.8
+      }
    },
    SubscriptBaselineDropMin = {
       luatex = "Umathsubshiftdrop",
@@ -60,6 +64,7 @@ params = {
       }
    },
    SuperscriptShiftUpCramped = {
+      satellite = true,
       luatex = "Umathsupshiftup",
       xetex = 22,
       pdftex = {
@@ -148,6 +153,7 @@ params = {
       }
    },
    StackTopDisplayStyleShiftUp = {
+      satellite = true,
       luatex = "Umathstacknumup",
       xetex = 33,
       pdftex = 8
@@ -164,6 +170,7 @@ params = {
       }
    },
    StackBottomDisplayStyleShiftDown = {
+      satellite = true,
       luatex = "Umathstackdenomdown",
       xetex = 35,
       pdftex = 11
@@ -186,6 +193,7 @@ params = {
       }
    },
    StackDisplayStyleGapMin = {
+      satellite = true,
       luatex = "Umathstackvgap",
       xetex = 37,
       pdftex = {
@@ -238,6 +246,7 @@ params = {
       }
    },
    FractionNumeratorDisplayStyleShiftUp = {
+      satellite = true,
       luatex = "Umathfractionnumup",
       xetex = 43,
       pdftex = 8
@@ -254,6 +263,7 @@ params = {
       }
    },
    FractionDenominatorDisplayStyleShiftDown = {
+      satellite = true,
       luatex = "Umathfractiondenomdown",
       xetex = 45,
       pdftex = 11
@@ -273,6 +283,7 @@ params = {
       }
    },
    FractionNumDisplayStyleGapMin = {
+      satellite = true,
       luatex = "Umathfractionnumvgap",
       xetex = 47,
       pdftex = {
@@ -304,6 +315,7 @@ params = {
       }
    },
    FractionDenomDisplayStyleGapMin = {
+      satellite = true,
       luatex = "Umathfractiondenomvgap",
       xetex = 50,
       pdftex = {
@@ -346,7 +358,11 @@ params = {
    UnderbarVerticalGap = {
       luatex = "Umathunderbarvgap",
       xetex = 56,
-      pdftex = "3 xi(8)"
+      pdftex = {
+         family = "symbols",
+         number = 8,
+         factor = 3
+      }
    },
    UnderbarRuleThickness = {
       luatex = "Umathunderbarrule",
@@ -401,6 +417,7 @@ params = {
       }
    },
    RadicalDisplayStyleVerticalGap = {
+      satellite = true,
       luatex = "Umathradicalvgap",
       xetex = 59,
       pdftex = {
@@ -449,6 +466,7 @@ params = {
       }
    },
    FractionDelimiterDisplaySize = {
+      satellite = true,
       luatex = "Umathfractiondelsize",
       pdftex = 20
    },
