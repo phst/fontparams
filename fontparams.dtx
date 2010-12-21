@@ -1,16 +1,29 @@
 % \iffalse meta-comment
 %
-% Copyright (C) 2010 by Philipp Stephani <st_philipp@yahoo.de>
+% fontparams.dtx
+% Copyright 2010 Philipp Stephani
 %
-% This file may be distributed and/or modified under the
-% conditions of the LaTeX Project Public License, either
-% version 1.3c of this license or (at your option) any later
-% version.  The latest version of this license is in:
+% This work may be distributed and/or modified under the
+% conditions of the LaTeX Project Public License, either version 1.3c
+% of this license or (at your option) any later version.
+% The latest version of this license is in
+%   http://www.latex-project.org/lppl.txt
+% and version 1.3c or later is part of all distributions of LaTeX
+% version 2009/09/24 or later.
 %
-%    http://www.latex-project.org/lppl.txt
+% This work has the LPPL maintenance status `maintained'.
 %
-% and version 1.3c or later is part of all distributions of
-% LaTeX version 2009/09/24 or later.
+% The Current Maintainer of this work is Philipp Stephani.
+%
+% This work consists of the files fontparams.dtx, fontparams.ins,
+% fontparams.lua, fontparams-data.lua, fontparams-compile.lua,
+% fontparams-compile-common.lua, fontparams-compile-legacy.lua,
+% fontparams-compile-luatex.lua, fontparams-compile-xetex.lua,
+% fontparams-compile-pdftex.lua, fontparams-test.tex, build-test.sh,
+% fontparams.el, Makefile and README.rst
+% and the derived files fontparams.sty, fontparams.def,
+% fontparams-legacy.def, fontparams-luatex.def, fontparams-xetex.def,
+% fontparams-pdftex.def and fontparams-primitives.lua.
 %
 % \fi
 %
@@ -220,8 +233,12 @@
 % the definitions depend on the font type.
 %    \begin{macrocode}
 \luatex_if_engine:TF {
+  \RequirePackage { luatexbase } [ 2010/05/27 ]
+  \RequireLuaModule { fontparams } [ 2010/12/21 ]
   \file_input:n { fontparams-luatex.def }
 } {
+  \file_input:n { fontparams-legacy.def }
+%    \end{macrocode}
 % \begin{macro}{\crampeddisplaystyle}
 % \begin{macro}{\crampedtextstyle}
 % \begin{macro}{\crampedscriptstyle}
@@ -230,14 +247,16 @@
 %   should generate an error when being expanded or typeset.  We just use
 %   quarks here.
 %    \begin{macrocode}
-  \clist_map_inline:nn { display, text, script, scriptscript } {
-    \exp_args:Nc \quark_new:N { cramped #1 style }
-  }
+  \quark_new:N \crampeddisplaystyle
+  \quark_new:N \crampedtextstyle
+  \quark_new:N \crampedscriptstyle
+  \quark_new:N \crampedscriptscriptstyle
 %    \end{macrocode}
 % \end{macro}
 % \end{macro}
 % \end{macro}
 % \end{macro}
+%    \begin{macrocode}
   \cs_new_protected_nopar:Npn \fontparams_abs:n #1 {
     \dimexpr
     \dim_compare:nNnT { #1 } < { \c_zero_dim } { - }

@@ -1,6 +1,32 @@
 #!/usr/bin/env lua
 
+-- fontparams-compile-luatex.lua
+-- Copyright 2010 Philipp Stephani
+--
+-- This work may be distributed and/or modified under the
+-- conditions of the LaTeX Project Public License, either version 1.3c
+-- of this license or (at your option) any later version.
+-- The latest version of this license is in
+--   http://www.latex-project.org/lppl.txt
+-- and version 1.3c or later is part of all distributions of LaTeX
+-- version 2009/09/24 or later.
+--
+-- This work has the LPPL maintenance status `maintained'.
+--
+-- The Current Maintainer of this work is Philipp Stephani.
+--
+-- This work consists of the files fontparams.dtx, fontparams.ins,
+-- fontparams.lua, fontparams-data.lua, fontparams-compile.lua,
+-- fontparams-compile-common.lua, fontparams-compile-legacy.lua,
+-- fontparams-compile-luatex.lua, fontparams-compile-xetex.lua,
+-- fontparams-compile-pdftex.lua, fontparams-test.tex, build-test.sh,
+-- fontparams.el, Makefile and README.rst
+-- and the derived files fontparams.sty, fontparams.def,
+-- fontparams-legacy.def, fontparams-luatex.def, fontparams-xetex.def,
+-- fontparams-pdftex.def and fontparams-primitives.lua.
+
 require("fontparams-data")
+require("fontparams-compile")
 
 local tpl_font_get_dimen = [[
   \dimexpr
@@ -94,6 +120,7 @@ local function format_style_macros(name, vtype, primitive)
 end
 
 io.output("fontparams-luatex.def")
+io.write(fontparams.compile.tex_license("fontparams-luatex.def"))
 
 for key, value in pairs(fontparams.data.params) do
    local vtype = value.type or "dimen"
@@ -106,4 +133,45 @@ for key, value in pairs(fontparams.data.params) do
    end
 end
 
+io.close()
+
+tpl_primitive = "%q"
+
+local function format_primitive(name)
+   return tpl_primitive:format(name)
+end
+
+tpl_primitive_list = [[
+luatexbase.provides_module {
+   name = "fontparams.primitives",
+   date = "2010/12/21",
+   version = "0.1",
+   description = "Engine-independent access to font parameters",
+   author = "Philipp Stephani",
+   license = "LPPL v1.3+"
+}
+module("fontparams.primitives")
+list = {
+  %s
+}
+]]
+
+local function format_primitive_list(list)
+   return tpl_primitive_list:format(list)
+end
+
+local primitives = { }
+
+for key, value in pairs(fontparams.data.params) do
+   local primitive = value.luatex
+   if primitive then
+      table.insert(primitives, format_primitive(primitive))
+   end
+end
+
+local list = table.concat(primitives, ",\n  ")
+
+io.output("fontparams-primitives.lua")
+io.write(fontparams.compile.lua_license("fontparams-primitives.lua"))
+io.write(format_primitive_list(list))
 io.close()

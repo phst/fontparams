@@ -1,6 +1,6 @@
 #!/usr/bin/env lua
 
--- fontparams-compile-common.lua
+-- fontparams-compile-legacy.lua
 -- Copyright 2010 Philipp Stephani
 --
 -- This work may be distributed and/or modified under the
@@ -28,23 +28,21 @@
 require("fontparams-data")
 require("fontparams-compile")
 
-local tpl_macros = [[
-\chk_if_free_cs:N \fontparams_font_get_%s:N
-\chk_if_free_cs:N \fontparams_font_set_%s:Nn
-\chk_if_free_cs:N \fontparams_style_get_%s:N
-\chk_if_free_cs:N \fontparams_style_set_%s:Nn
+local tpl_primitive = [[
+\chk_if_free_cs:N \%s
 ]]
 
-local function format_macros(name)
-   return tpl_macros:format(name, name, name, name)
+local function format_primitive(name)
+   return tpl_primitive:format(name)
 end
 
-io.output("fontparams.def")
-io.write(fontparams.compile.tex_license("fontparams.def"))
+io.output("fontparams-legacy.def")
+io.write(fontparams.compile.tex_license("fontparams-legacy.def"))
 
 for key, value in pairs(fontparams.data.params) do
-   if type(key) == "string" then
-      io.write(format_macros(key))
+   local primitive = value.luatex
+   if primitive then
+      io.write(format_primitive(primitive))
    end
 end
 

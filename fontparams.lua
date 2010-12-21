@@ -1,6 +1,4 @@
-#!/usr/bin/env lua
-
--- fontparams-compile-common.lua
+-- fontparams.lua
 -- Copyright 2010 Philipp Stephani
 --
 -- This work may be distributed and/or modified under the
@@ -25,27 +23,28 @@
 -- fontparams-legacy.def, fontparams-luatex.def, fontparams-xetex.def,
 -- fontparams-pdftex.def and fontparams-primitives.lua.
 
-require("fontparams-data")
-require("fontparams-compile")
+local err, warn, info, log = luatexbase.provides_module {
+   name = "fontparams",
+   date = "2010/12/21",
+   version = "0.1",
+   description = "Engine-independent access to font parameters",
+   author = "Philipp Stephani",
+   license = "LPPL v1.3+"
+}
 
-local tpl_macros = [[
-\chk_if_free_cs:N \fontparams_font_get_%s:N
-\chk_if_free_cs:N \fontparams_font_set_%s:Nn
-\chk_if_free_cs:N \fontparams_style_get_%s:N
-\chk_if_free_cs:N \fontparams_style_set_%s:Nn
-]]
+module("fontparams")
 
-local function format_macros(name)
-   return tpl_macros:format(name, name, name, name)
-end
+local cramped_styles = {
+   "crampeddisplaystyle",
+   "crampedtextstyle",
+   "crampedscriptstyle",
+   "crampedscriptscriptstyle"
+}
 
-io.output("fontparams.def")
-io.write(fontparams.compile.tex_license("fontparams.def"))
+-- TODO: check whether control sequences already defined
+tex.enableprimitives("", cramped_styles)
 
-for key, value in pairs(fontparams.data.params) do
-   if type(key) == "string" then
-      io.write(format_macros(key))
-   end
-end
+luatexbase.require_module("fontparams-primitives", "2010/12/21")
 
-io.close()
+-- TODO: check whether control sequences already defined
+tex.enableprimitives("", fontparams.primitives.list)
