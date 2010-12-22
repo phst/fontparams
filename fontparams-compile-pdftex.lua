@@ -28,6 +28,9 @@
 require("fontparams-data")
 require("fontparams-compile")
 
+local params = fontparams.data.params
+local common = fontparams.compile
+
 local properties = {
    family = "letters",
    number = 0,
@@ -45,29 +48,29 @@ local function inflate(def, child1, child2)
             for prop, default in pairs(properties) do
                local obj = value[prop]
                if obj == nil then
-                  obj = fontparams.compile.navigate(def, child1, child2, prop)
+                  obj = common.navigate(def, child1, child2, prop)
                end
                if obj == nil and default ~= 0 then
                   obj = default
                end
                res[prop] = obj
             end
-            if res.number == nil then
-               res.number = fontparams.compile.navigate_default(def, child1, child2, "number")
+            if type(res.number) ~= "number" then
+               error("Something is wrong: " .. tostring(res.number))
             end
             result[index] = res
          end
       else
          local res = { }
          for prop, default in pairs(properties) do
-            obj = fontparams.compile.navigate(def, child1, child2, prop)
+            obj = common.navigate(def, child1, child2, prop)
             if obj == nil and default ~= 0 then
                obj = default
             end
             res[prop] = obj
          end
-         if res.number == nil then
-            res.number = fontparams.compile.navigate_default(def, child1, child2, "number")
+         if type(res.number) ~= "number" then
+            error("Something is wrong: " .. tostring(res.number))
          end
          result[1] = res
       end
@@ -75,12 +78,14 @@ local function inflate(def, child1, child2)
       result[1] = {
          command = elem
       }
-   else
+   elseif type(elem) == "number" then
       result[1] = {
          family = "letters",
          number = elem,
          absolute = false
       }
+   else
+      error("Invalid definition")
    end
    return result
 end
@@ -109,7 +114,7 @@ local function format_font_term(term)
    else
       local factor = term.factor
       local absolute = term.absolute
-      local number = fontparams.compile.int_const(term.number)
+      local number = common.int_const(term.number)
       if factor then
          if absolute then
             return tpl_font_term_abs:format(factor, number)
@@ -155,7 +160,7 @@ local tpl_font_set_prim = [[
   %s \dimexpr #2 \relax]]
 
 local tpl_font_set_comp = [[
-  \msg_error:nnx { fontparams } { readonly } { %s }]]
+  \msg_error:nnx { fontparams } { readonly-param } { %s }]]
 
 local function format_font_set(name, def)
    local elem = def.nondisplay.noncramped
@@ -199,8 +204,8 @@ local function format_style_term(term, font)
    else
       local factor = term.factor
       local absolute = term.absolute
-      local number = fontparams.compile.int_const(term.number)
-      local fam = fontparams.compile.int_const(families[term.family])
+      local number = common.int_const(term.number)
+      local fam = common.int_const(families[term.family])
       if factor then
          if absolute then
             return tpl_style_term_abs:format(factor, number, font, fam)
@@ -247,7 +252,7 @@ local tpl_style_complex = [[
   }]]
 
 local function format_style_code(def)
-   local simple = fontparams.compile.is_simple(def)
+   local simple = common.is_simple(def)
    local tn = format_style_expr(def.nondisplay.noncramped, "text")
    if simple then
       return tpl_style_simple:format(tn)
@@ -283,7 +288,7 @@ local tpl_style_set_prim = [[
   \dimexpr #2 \relax]]
 
 local tpl_style_set_comp = [[
-  \msg_error:nnx { fontparams } { readonly } { %s }]]
+  \msg_error:nnx { fontparams } { readonly-param } { %s }]]
 
 local function format_style_set(name, comp, expr)
    if comp then
@@ -322,21 +327,28 @@ end
 local primitives = { }
 
 io.output("fontparams-pdftex.def")
-io.write(fontparams.compile.tex_license("fontparams-pdftex.def"))
+io.write(common.tex_license("fontparams-pdftex.def"))
 
-for key, value in pairs(fontparams.data.params) do
-   local def = fontparams.compile.inflate(value.pdftex)
-   if def then
-      def.display.cramped = inflate(def, "display", "cramped")
-      def.display.noncramped = inflate(def, "display", "noncramped")
-      def.nondisplay.cramped = inflate(def, "nondisplay", "cramped")
-      def.nondisplay.noncramped = inflate(def, "nondisplay", "noncramped")
+for key, dummy in pairs(params) do
+   local value = common.value(params, key)
+   local raw = common.definition(value, "pdftex")
+   if raw then
+      local def = {
+         display = {
+            cramped = inflate(raw, "display", "cramped"),
+            noncramped = inflate(raw, "display", "noncramped")
+         },
+         nondisplay = {
+            cramped = inflate(raw, "nondisplay", "cramped"),
+            noncramped = inflate(raw, "nondisplay", "noncramped")
+         }
+      }
       local primitive = value.luatex
       local vtype = value.type or "dimen"
       if vtype ~= "dimen" then
          error(string.format("Invalid type %s", vtype))
       end
-      local satellite = value.satellite or false
+      local satellite = value.only_display or value.only_cramped
       local comp = is_composite(def.display.cramped) or is_composite(def.display.noncramped)
                    or is_composite(def.nondisplay.cramped) or is_composite(def.nondisplay.noncramped)
       local expr = format_style_code(def)

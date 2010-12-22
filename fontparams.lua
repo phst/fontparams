@@ -35,8 +35,7 @@ local err, warn, info, log = luatexbase.provides_module {
 luatexbase.require_module("fontparams-primitives", "2010/12/21")
 
 local tex = tex
-local luatexbase = luatexbase
-local fontparams = fontparams
+local primitives = fontparams.primitives.list
 
 module("fontparams")
 
@@ -47,6 +46,7 @@ local cramped_styles = {
    "crampedscriptscriptstyle"
 }
 
--- TODO: check whether control sequences already defined
-tex.enableprimitives("", cramped_styles)
-tex.enableprimitives("", fontparams.primitives.list)
+function activate_primitives()
+   tex.enableprimitives("", cramped_styles)
+   tex.enableprimitives("", primitives)
+end

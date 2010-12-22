@@ -28,6 +28,9 @@
 require("fontparams-data")
 require("fontparams-compile")
 
+local params = fontparams.data.params
+local common = fontparams.compile
+
 local tpl_macros = [[
 \chk_if_free_cs:N \fontparams_font_get_%s:N
 \chk_if_free_cs:N \fontparams_font_set_%s:Nn
@@ -40,9 +43,9 @@ local function format_macros(name)
 end
 
 io.output("fontparams.def")
-io.write(fontparams.compile.tex_license("fontparams.def"))
+io.write(common.tex_license("fontparams.def"))
 
-for key, value in pairs(fontparams.data.params) do
+for key, value in pairs(params) do
    if type(key) == "string" then
       io.write(format_macros(key))
    end

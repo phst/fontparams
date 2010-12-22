@@ -36,8 +36,14 @@ changes_log := $(name).glg
 changes_sty := gglo.ist
 test_template := $(name)-test.tex
 
+lua_module := $(name).lua
+generated := $(name).def $(name)-legacy.def $(name)-luatex.def $(name)-xetex.def $(name)-pdftex.def $(name)-primitives.lua
+data := $(name)-data.lua
+compile_mod := $(name)-compile.lua
+runtime_files := $(destination) $(lua_module) $(generated)
 
-all: $(destination) $(auctex_style)
+
+all: $(runtime_files) $(auctex_style)
 
 pdf: $(manual)
 
@@ -46,6 +52,8 @@ complete: all pdf
 install: all
 	$(INSTALL) -d $(destdir)
 	$(INSTALL_DATA) $(destination) $(destdir)
+	$(INSTALL_DATA) $(lua_module) $(destdir)
+	$(INSTALL_DATA) $(generated) $(destdir)
 	$(INSTALL) -d $(auctexdir)
 	$(INSTALL_DATA) $(auctex_style) $(auctexdir)
 	$(MKTEXLSR)
@@ -60,14 +68,29 @@ install-complete: install install-pdf
 $(destination): $(source) $(driver)
 	$(TEX) $(driver)
 
-$(manual): $(source) $(destination)
+$(manual): $(source) $(runtime_files)
 	$(LATEX) $(LATEXFLAGS_DRAFT) $(source)
 	$(MAKEINDEX) -s $(index_sty) -o $(index_dest) -t $(index_log) $(index_src)
 	$(MAKEINDEX) -s $(changes_sty) -o $(changes_dest) -t $(changes_log) $(changes_src)
 	$(LATEX) $(LATEXFLAGS_DRAFT) $(source)
 	$(LATEX) $(LATEXFLAGS_FINAL) $(source)
 
-test: $(destination) $(test_template)
+$(name).def: $(name)-compile-common.lua $(compile_mod) $(data)
+	./$<
+
+$(name)-legacy.def: $(name)-compile-legacy.lua $(compile_mod) $(data)
+	./$<
+
+$(name)-luatex.def: $(name)-compile-luatex.lua $(compile_mod) $(data)
+	./$<
+
+$(name)-xetex.def: $(name)-compile-xetex.lua $(compile_mod) $(data)
+	./$<
+
+$(name)-pdftex.def: $(name)-compile-pdftex.lua $(compile_mod) $(data)
+	./$<
+
+check: $(runtime_files) $(test_template)
 	./build-test.sh
 
 .SUFFIXES:

@@ -28,6 +28,9 @@
 require("fontparams-data")
 require("fontparams-compile")
 
+local params = fontparams.data.params
+local common = fontparams.compile
+
 local tpl_font_get_dimen = [[
   \fontdimen %s #1]]
 
@@ -36,7 +39,7 @@ local tpl_font_get_int = [[
 
 local function format_font_get(vtype, def)
    local value = def.nondisplay.noncramped
-   local number = fontparams.compile.int_const(value)
+   local number = common.int_const(value)
    if vtype == "dimen" then
       return tpl_font_get_dimen:format(number)
    else
@@ -52,7 +55,7 @@ local tpl_font_set_int = [[
 
 local function format_font_set(vtype, def)
    local value = def.nondisplay.noncramped
-   local number = fontparams.compile.int_const(value)
+   local number = common.int_const(value)
    if vtype == "dimen" then
       return tpl_font_set_dimen:format(number)
    else
@@ -100,14 +103,14 @@ local tpl_style_complex = [[
   \c_two]]
 
 local function format_style_expr(def)
-   local simple = fontparams.compile.is_simple(def)
-   local nn = fontparams.compile.int_const(def.nondisplay.noncramped)
+   local simple = common.is_simple(def)
+   local nn = common.int_const(def.nondisplay.noncramped)
    if simple then
       return tpl_style_simple:format(nn)
    else
-      local yy = fontparams.compile.int_const(def.display.cramped)
-      local yn = fontparams.compile.int_const(def.display.noncramped)
-      local ny = fontparams.compile.int_const(def.nondisplay.cramped)
+      local yy = common.int_const(def.display.cramped)
+      local yn = common.int_const(def.display.noncramped)
+      local ny = common.int_const(def.nondisplay.cramped)
       return tpl_style_complex:format(yn, yy, nn, ny, nn, ny, nn, ny)
    end
 end
@@ -172,18 +175,18 @@ end
 local primitives = { }
 
 io.output("fontparams-xetex.def")
-io.write(fontparams.compile.tex_license("fontparams-xetex.def"))
+io.write(common.tex_license("fontparams-xetex.def"))
 
-for key, value in pairs(fontparams.data.params) do
-   local def = fontparams.compile.inflate(value.xetex)
+for key, dummy in pairs(params) do
+   local primitive = dummy.luatex
+   local value = common.value(params, key)
+   local def = common.definition(value, "xetex")
    if def then
-      local primitive = value.luatex
       local vtype = value.type or "dimen"
-      local satellite = value.satellite or false
       local expr = format_style_expr(def)
       io.write(format_font_macros(key, vtype, def))
       io.write(format_style_macros(key, vtype, expr))
-      if primitive and not satellite then
+      if primitive then
          if primitives[primitive] then
             error(string.format([[Primitive \%s defined twice]], primitive))
          end

@@ -28,6 +28,9 @@
 require("fontparams-data")
 require("fontparams-compile")
 
+local params = fontparams.data.params
+local common = fontparams.compile
+
 local tpl_primitive = [[
 \chk_if_free_cs:N \%s
 ]]
@@ -37,9 +40,9 @@ local function format_primitive(name)
 end
 
 io.output("fontparams-legacy.def")
-io.write(fontparams.compile.tex_license("fontparams-legacy.def"))
+io.write(common.tex_license("fontparams-legacy.def"))
 
-for key, value in pairs(fontparams.data.params) do
+for key, value in pairs(params) do
    local primitive = value.luatex
    if primitive then
       io.write(format_primitive(primitive))

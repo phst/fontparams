@@ -18,16 +18,68 @@
 -- fontparams-compile-common.lua, fontparams-compile-legacy.lua,
 -- fontparams-compile-luatex.lua, fontparams-compile-xetex.lua,
 -- fontparams-compile-pdftex.lua, fontparams-test.tex, build-test.sh,
--- fontparams.el, Makefile and README.rst
+-- compare-data.py, fontparams.el, Makefile and README.rst
 -- and the derived files fontparams.sty, fontparams.def,
 -- fontparams-legacy.def, fontparams-luatex.def, fontparams-xetex.def,
 -- fontparams-pdftex.def and fontparams-primitives.lua.
 
+local error = error
 local type = type
+local tostring = tostring
 local pairs = pairs
 local select = select
 
 module("fontparams.compile")
+
+local function deep_equal(a, b)
+   if type(a) == type(b) then
+      if type(a) == "table" then
+         for k, v in pairs(a) do
+            if not deep_equal(v, b[k]) then
+               return false
+            end
+         end
+         return true
+      else
+         return a == b
+      end
+   else
+      return false
+   end
+end
+
+local function all_deep_equal(...)
+   local length = select("#", ...)
+   if length > 0 then
+      local first = select(1, ...)
+      for index = 2, length do
+         if not deep_equal(first, select(index, ...)) then
+            return false
+         end
+      end
+   end
+   return true
+end
+
+local function deep_copy(object)
+   if type(object) == "table" then
+      local result = { }
+      for k, v in pairs(object) do
+         result[k] = deep_copy(v)
+      end
+      return result
+   else
+      return object
+   end
+end
+
+local function merge(a, b)
+   local result = deep_copy(a)
+   for k, v in pairs(b) do
+      result[k] = deep_copy(v)
+   end
+   return result
+end
 
 local tpl_tex_license = [[
 %% %s
@@ -114,76 +166,61 @@ end
 
 function navigate_default(root, ...)
    local number = select("#", ...)
+   local last = select(number, ...)
    local branch = root
+   local result = nil
    for index = 1, number do
       if type(branch) == "table" then
+         if branch[last] ~= nil then
+            result = branch[last]
+         end
          local name = select(index, ...)
          if branch[name] ~= nil then
             branch = branch[name]
          end
       else
-         return branch
+         return result or branch
       end
    end
-   return branch
+   return result or branch
 end
 
-function inflate(raw)
+function value(data, name)
+   local raw = data[name]
+   local parent = raw.parent
+   if parent then
+      return merge(data[parent], raw)
+   else
+      return deep_copy(raw)
+   end
+end
+
+function definition(value, engine)
+   local raw = value[engine]
    if raw then
-      result = {
+      local nondisplay = value.only_display and "display" or "nondisplay"
+      local noncramped = value.only_cramped and "cramped" or "noncramped"
+      local result = {
          display = {
             cramped = navigate_default(raw, "display", "cramped"),
-            noncramped = navigate_default(raw, "display", "noncramped"),
+            noncramped = navigate_default(raw, "display", noncramped),
          },
          nondisplay = {
-            cramped = navigate_default(raw, "nondisplay", "cramped"),
-            noncramped = navigate_default(raw, "nondisplay", "noncramped")
+            cramped = navigate_default(raw, nondisplay, "cramped"),
+            noncramped = navigate_default(raw, nondisplay, noncramped)
          }
       }
       if type(raw) == "table" then
-         for key, value in pairs(raw) do
-            if result[key] == nil then
-               result[key] = value
-            end
-         end
-      end
-      return result
-   end
-end
-
-local function deep_equal(a, b)
-   if type(a) == type(b) then
-      if type(a) == "table" then
-         for k, v in pairs(a) do
-            if not deep_equal(v, b[k]) then
-               return false
-            end
-         end
-         return true
+         return merge(raw, result)
       else
-         return a == b
-      end
-   else
-      return false
-   end
-end
-
-local function all_equal(...)
-   local length = select("#", ...)
-   if length > 0 then
-      local first = select(1, ...)
-      for index = 2, length do
-         if not deep_equal(first, select(index, ...)) then
-            return false
-         end
+         return result
       end
    end
-   return true
 end
 
 function is_simple(def)
-   return all_equal(def.display.cramped, def.display.noncramped,
-                    def.nondisplay.cramped, def.nondisplay.noncramped)
+   return all_deep_equal(def.display.cramped, def.display.noncramped,
+                         def.nondisplay.cramped, def.nondisplay.noncramped)
 end
 
 local integer_constants = {
@@ -227,6 +264,6 @@ function int_const(number)
          return number .. "~"
       end
    else
-      error("Argument must be a number")
+      error("Argument must be a number, but is " .. tostring(number))
    end
 end

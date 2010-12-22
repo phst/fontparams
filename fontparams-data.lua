@@ -57,20 +57,17 @@ params = {
       },
       pdftex = {
          display = {
-            cramped = 15,
             noncramped = 13
          },
-         nondisplay = 21
+         nondisplay = {
+            noncramped = 14
+         },
+         cramped = 15
       }
    },
    SuperscriptShiftUpCramped = {
-      satellite = true,
-      luatex = "Umathsupshiftup",
-      xetex = 22,
-      pdftex = {
-         display = 15,
-         nondisplay = 21
-      }
+      only_cramped = true,
+      parent = "SuperscriptShiftUp"
    },
    SuperscriptBottomMin = {
       luatex = "Umathsupbottommin",
@@ -153,10 +150,8 @@ params = {
       }
    },
    StackTopDisplayStyleShiftUp = {
-      satellite = true,
-      luatex = "Umathstacknumup",
-      xetex = 33,
-      pdftex = 8
+      only_display = true,
+      parent = "StackTopShiftUp"
    },
    StackBottomShiftDown = {
       luatex = "Umathstackdenomdown",
@@ -170,10 +165,8 @@ params = {
       }
    },
    StackBottomDisplayStyleShiftDown = {
-      satellite = true,
-      luatex = "Umathstackdenomdown",
-      xetex = 35,
-      pdftex = 11
+      only_display = true,
+      parent = "StackBottomShiftDown"
    },
    StackGapMin = {
       luatex = "Umathstackvgap",
@@ -193,14 +186,8 @@ params = {
       }
    },
    StackDisplayStyleGapMin = {
-      satellite = true,
-      luatex = "Umathstackvgap",
-      xetex = 37,
-      pdftex = {
-         family = "symbols",
-         number = 8,
-         factor = 7
-      }
+      only_display = true,
+      parent = "StackGapMin"
    },
    StretchStackTopShiftUp = {
       luatex = "Umathoverdelimiterbgap",
@@ -246,10 +233,8 @@ params = {
       }
    },
    FractionNumeratorDisplayStyleShiftUp = {
-      satellite = true,
-      luatex = "Umathfractionnumup",
-      xetex = 43,
-      pdftex = 8
+      only_display = true,
+      parent = "FractionNumeratorShiftUp"
    },
    FractionDenominatorShiftDown = {
       luatex = "Umathfractiondenomdown",
@@ -263,10 +248,8 @@ params = {
       }
    },
    FractionDenominatorDisplayStyleShiftDown = {
-      satellite = true,
-      luatex = "Umathfractiondenomdown",
-      xetex = 45,
-      pdftex = 11
+      only_display = true,
+      parent = "FractionDenominatorShiftDown"
    },
    FractionNumeratorGapMin = {
       luatex = "Umathfractionnumvgap",
@@ -283,14 +266,8 @@ params = {
       }
    },
    FractionNumDisplayStyleGapMin = {
-      satellite = true,
-      luatex = "Umathfractionnumvgap",
-      xetex = 47,
-      pdftex = {
-         family = "symbols",
-         number = 8,
-         factor = 3
-      }
+      only_display = true,
+      parent = "FractionNumeratorGapMin"
    },
    FractionRuleThickness = {
       luatex = "Umathfractionrule",
@@ -315,14 +292,8 @@ params = {
       }
    },
    FractionDenomDisplayStyleGapMin = {
-      satellite = true,
-      luatex = "Umathfractiondenomvgap",
-      xetex = 50,
-      pdftex = {
-         family = "symbols",
-         number = 8,
-         factor = 3
-      }
+      only_display = true,
+      parent = "FractionDenominatorGapMin"
    },
    SkewedFractionHorizontalGap = {
       xetex = 51
@@ -417,22 +388,8 @@ params = {
       }
    },
    RadicalDisplayStyleVerticalGap = {
-      satellite = true,
-      luatex = "Umathradicalvgap",
-      xetex = 59,
-      pdftex = {
-         sum = {
-            {
-               family = "symbols",
-               number = 8
-            },
-            {
-               number = 5,
-               absolute = true,
-               factor = 0.25
-            }
-         }
-      }
+      only_display = true,
+      parent = "RadicalVerticalGap"
    },
    RadicalRuleThickness = {
       luatex = "Umathradicalrule",
@@ -466,9 +423,8 @@ params = {
       }
    },
    FractionDelimiterDisplaySize = {
-      satellite = true,
-      luatex = "Umathfractiondelsize",
-      pdftex = 20
+      only_display = true,
+      parent = "FractionDelimiterSize"
    },
    {
       luatex = "Umathlimitabovekern",

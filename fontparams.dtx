@@ -220,6 +220,59 @@
   {Unified font parameter access}
 %    \end{macrocode}
 %
+% \subsection{Messages}
+%
+% \begin{l3message}{unknown-style}
+%   This message is issued when an unknown mathematical style is queried.  The
+%   only argument should be the stringized name of the requested style token.
+%    \begin{macrocode}
+\msg_new:nnnn { fontparams } { unknown-style } {
+  Unknown~ mathematical~ style~ #1
+} {
+  Use~ one~ of:~
+  \exp_not:n {
+    \displaystyle,~ \crampeddisplaystyle,~
+    \textstyle,~ \crampedtextstyle,~
+    \scriptstyle,~ \crampedscriptstyle,~
+    \scriptscriptstyle,~ \crampedscriptscriptstyle
+  }
+}
+%    \end{macrocode}
+% \end{l3message}
+%
+% \begin{l3message}{unknown-param}
+%   This message is issued when an unknown parameter is queried.  The only
+%   argument should be the OpenType name of the parameter.
+%    \begin{macrocode}
+\msg_new:nnn { fontparams } { unknown-param } {
+  Unknown~ font~ parameter~ #1
+}
+%    \end{macrocode}
+% \end{l3message}
+%
+% \begin{l3message}{readonly-param}
+%   This message is issued when tries to set a parameter which is read-only for
+%   the current engine.  The only argument should be the OpenType name of the
+%   parameter.
+%    \begin{macrocode}
+\msg_new:nnn { fontparams } { readonly-param } {
+  Font~ parameter~ #1~ is~ read-only
+}
+%    \end{macrocode}
+% \end{l3message}
+%
+% \begin{l3message}{primitive-exists}
+%   This message is issued when a \hologo{LuaTeX} primitive is already defined
+%   prior to loading the package.  The only argument should be the stringized
+%   name of the primitive token.
+%    \begin{macrocode}
+\msg_new:nnn { fontparams } { primitive-exists } {
+  The~ command~ #1~ already~ exists~ and \\
+  will~ be~ overwritten
+}
+%    \end{macrocode}
+% \end{l3message}
+%
 % \subsection{Common definitions}
 %
 % Now we load the auto-generated file of common definitions.
@@ -227,18 +280,51 @@
 \file_input:n { fontparams.def }
 %    \end{macrocode}
 %
-% \subsection{Engine-specific definitions}
+% \subsection{\Hologo{LuaTeX} definitions}
 %
-% We load the engine-specific definition files—except for \hologo{XeTeX}, where
-% the definitions depend on the font type.
+% If \hologo{LuaTeX} is running, we load the accompanying Lua module.
 %    \begin{macrocode}
 \luatex_if_engine:TF {
   \RequirePackage { luatexbase } [ 2010/05/27 ]
   \RequireLuaModule { fontparams } [ 2010/12/21 ]
+%    \end{macrocode}
+%
+% \begin{macro}{\fontparams_undefine:N}
+%   The macro \cmd{\fontparams_undefine:N}\marg{control sequence} warns if the
+%   \term{control sequence} is already defined and then undefines it.
+%    \begin{macrocode}
+  \cs_new_protected_nopar:Npn \fontparams_undefine:N #1 {
+    \cs_if_exist:NT #1 {
+      \msg_warning:nnx { fontparams } { primitive-exists }
+        { \token_to_str:N #1 }
+    }
+%    \end{macrocode}
+% \cmd{\cs_if_exists:N} treats control sequences equal to \cmd{\relax} as
+% undefined, but \verb|tex.enableprimitives| does not.  So we always explicitly
+% undefine the control sequence.
+%    \begin{macrocode}
+    \cs_undefine:N #1
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% Finally we load the \hologo{TeX} definitions and enable the additional
+% primitives.  The primitives will always be enabled because the definition
+% file undefines all of them.
+%    \begin{macrocode}
   \file_input:n { fontparams-luatex.def }
+  \lua_now:x { fontparams.activate_primitives() }
+%    \end{macrocode}
+%
+% \subsection{Legacy definitions}
+%
+% First we load the file that contains the definitions common to \hologo{XeTeX}
+% and \hologo{pdfTeX}.
+%    \begin{macrocode}
 } {
   \file_input:n { fontparams-legacy.def }
 %    \end{macrocode}
+%
 % \begin{macro}{\crampeddisplaystyle}
 % \begin{macro}{\crampedtextstyle}
 % \begin{macro}{\crampedscriptstyle}
@@ -256,6 +342,10 @@
 % \end{macro}
 % \end{macro}
 % \end{macro}
+%
+% \begin{macro}{\fontparams_abs:n}
+%   The macro \cmd{\fontparams_abs:n}\marg{dimen} expands to another
+%   \term{dimen} which is the absolute value of the passed \term{dimen}.
 %    \begin{macrocode}
   \cs_new_protected_nopar:Npn \fontparams_abs:n #1 {
     \dimexpr
@@ -263,7 +353,21 @@
     \dimexpr #1 \relax
     \relax
   }
+%    \end{macrocode}
+% \end{macro}
+%
+% We load the \hologo{pdfTeX} definitions for both \hologo{pdfTeX} and
+% \hologo{XeTeX} so that legacy fonts use the correct definitions in
+% \hologo{XeTeX}.
+%    \begin{macrocode}
   \file_input:n { fontparams-pdftex.def }
+%    \end{macrocode}
+%
+% \begin{macro}{\fontparams_load_xetex_def:}
+% \begin{macro}{\fontparams_load_pdftex_def:}
+%   For \hologo{XeTeX} only we create two macros to switch between the
+%   definitions.
+%    \begin{macrocode}
   \xetex_if_engine:T {
     \cs_new_protected_nopar:Npn \fontparams_load_xetex_def: {
       \file_input:n { fontparams-xetex.def }
@@ -274,6 +378,8 @@
   }
 }
 %    \end{macrocode}
+% \end{macro}
+% \end{macro}
 %
 % \subsection{User interface}
 %
@@ -295,7 +401,7 @@
 % \end{macro}
 %
 % \begin{macro}{\FontParameter}
-%   \cmd{\FontParameter}\marg{font}\marg{name} expands to a \term{number} or a
+%   \cmd{\FontParameter}\marg{name}\marg{font} expands to a \term{number} or a
 %   \term{dimen} which contains the value of the font parameter identified by
 %   \meta{name} in the \term{font}.
 %    \begin{macrocode}
@@ -309,9 +415,8 @@
 %    \end{macrocode}
 % \end{macro}
 %
-
 % \begin{macro}{\SetFontParameter}
-%   \cmd{\SetFontParameter}\marg{font}\marg{name}\marg{value} sets the font
+%   \cmd{\SetFontParameter}\marg{name}\marg{font}\marg{value} sets the font
 %   parameter identified by \meta{name} in the \term{font} to the \meta{value},
 %   which must be a \term{number} or a \term{dimen}, depending on the data type
 %   of the parameter.
@@ -326,6 +431,10 @@
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\FontParameterByStyle}
+%   \cmd{\FontParameterByStyle}\marg{name}\marg{style} expands to a
+%   \term{number} or a \term{dimen} which contains the value of the font
+%   parameter identified by \meta{name} in the \meta{style}.
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \FontParameterByStyle #1 #2 {
   \cs_if_exist:cTF { fontparams_style_get_ #1 :N } {
@@ -334,6 +443,15 @@
     \msg_error:nnx { fontparams } { unknown-param } { #1 }
   }
 }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\SetFontParameterByStyle}
+%   \cmd{\SetFontParameterByStyle}\marg{name}\marg{style}\marg{value} sets the
+%   font parameter identified by \meta{name} in the \meta{style} to the
+%   \meta{value}, which must be a \term{number} or a \term{dimen}, depending on
+%   the data type of the parameter.
+%    \begin{macrocode}
 \cs_new_protected_nopar:Npn \SetFontParameterByStyle #1 #2 #3 {
   \cs_if_exist:cTF { fontparams_style_set_ #1 :Nn } {
     \use:c { fontparams_style_set_ #1 :Nn } #2 { #3 }
@@ -341,30 +459,9 @@
     \msg_error:nnx { fontparams } { unknown-param } { #1 }
   }
 }
-%    \end{macrocode}
-%
-% \subsection{Messages}
-%
-%    \begin{macrocode}
-\msg_new:nnnn { fontparams } { unknown-style } {
-  Unknown~ math~ style~ #1
-} {
-  Use~ one~ of:~
-  \exp_not:n {
-    \displaystyle,~ \crampeddisplaystyle,~
-    \textstyle,~ \crampedtextstyle,~
-    \scriptstyle,~ \crampedscriptstyle,~
-    \scriptscriptstyle,~ \crampedscriptscriptstyle
-  }
-}
-\msg_new:nnn { fontparams } { unknown-param } {
-  Unknown~ font~ parameter~ #1
-}
-\msg_new:nnn { fontparams } { readonly-param } {
-  Font~ parameter~ #1~ is~ read-only
-}
 %</package>
 %    \end{macrocode}
+% \end{macro}
 %
 % \Finale
 \endinput

@@ -28,16 +28,19 @@
 require("fontparams-data")
 require("fontparams-compile")
 
+local params = fontparams.data.params
+local common = fontparams.compile
+
 local tpl_font_get_dimen = [[
   \dimexpr
-  \directlua {
+  \lua_now:x {
     tex.sprint(font.getfont(font.id(" \cs_to_str:N #1 ")).MathConstants.%s)
   } sp
   \relax]]
 
 local tpl_font_get_int = [[
   \numexpr
-  \directlua {
+  \lua_now:x {
     tex.sprint(font.getfont(font.id(" \cs_to_str:N #1 ")).MathConstants.%s)
   }
   \relax]]
@@ -51,12 +54,12 @@ local function format_font_get(name, vtype)
 end
 
 local tpl_font_set_dimen = [[
-  \directlua {
+  \lua_now:x {
     font.getfont(font.id(" \cs_to_str:N #1 ")).MathConstants.%s = \number \dimexpr #2 \relax
   }]]
 
 local tpl_font_set_int = [[
-  \directlua {
+  \lua_now:x {
     font.getfont(font.id(" \cs_to_str:N #1 ")).MathConstants.%s = \number \numexpr #2 \relax
   }]]
 
@@ -69,10 +72,10 @@ local function format_font_set(name, vtype)
 end
 
 local tpl_font_macros = [[
-\cs_set_protected_nopar:Npn \fontparams_font_get_%s:N #1 {
+\cs_new_protected_nopar:Npn \fontparams_font_get_%s:N #1 {
 %s
 }
-\cs_set_protected_nopar:Npn \fontparams_font_set_%s:Nn #1 #2 {
+\cs_new_protected_nopar:Npn \fontparams_font_set_%s:Nn #1 #2 {
 %s
 }
 ]]
@@ -86,50 +89,112 @@ end
 local tpl_style_get = [[
   \%s #1]]
 
-local function format_style_get(name, vtype)
-   return tpl_style_get:format(name)
-end
+local tpl_style_get_display = [[
+  \exp_last_unbraced:Nf \%s {
+    \cs_if_eq:NNTF #1 \displaystyle { \displaystyle } {
+      \cs_if_eq:NNTF #1 \crampeddisplaystyle { \crampeddisplaystyle } {
+        \cs_if_eq:NNTF #1 \textstyle { \displaystyle } {
+          \cs_if_eq:NNTF #1 \crampedtextstyle { \crampeddisplaystyle } {
+            \cs_if_eq:NNTF #1 \scriptstyle { \displaystyle } {
+              \cs_if_eq:NNTF #1 \crampedscriptstyle { \crampeddisplaystyle } {
+                \cs_if_eq:NNTF #1 \scriptscriptstyle { \displaystyle } {
+                  \cs_if_eq:NNTF #1 \crampedscriptscriptstyle { \crampeddisplaystyle } {
+                    \msg_error:nnx { fontparams } { unknown-style } { \token_to_str:N #1 }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }]]
 
-local tpl_style_set_dimen = [[
-  \%s #1 \dimexpr #2 \relax]]
+local tpl_style_get_cramped = [[
+  \exp_last_unbraced:Nf \%s {
+    \cs_if_eq:NNTF #1 \displaystyle { \crampeddisplaystyle } {
+      \cs_if_eq:NNTF #1 \crampeddisplaystyle { \crampeddisplaystyle } {
+        \cs_if_eq:NNTF #1 \textstyle { \crampedtextstyle } {
+          \cs_if_eq:NNTF #1 \crampedtextstyle { \crampedtextstyle } {
+            \cs_if_eq:NNTF #1 \scriptstyle { \crampedscriptstyle } {
+              \cs_if_eq:NNTF #1 \crampedscriptstyle { \crampedscriptstyle } {
+                \cs_if_eq:NNTF #1 \scriptscriptstyle { \crampedscriptscriptstyle } {
+                  \cs_if_eq:NNTF #1 \crampedscriptscriptstyle { \crampedscriptscriptstyle } {
+                    \msg_error:nnx { fontparams } { unknown-style } { \token_to_str:N #1 }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }]]
 
-local tpl_style_set_int = [[
-  \%s #1 \numexpr #2 \relax]]
-
-local function format_style_set(name, vtype)
-   if vtype == "dimen" then
-      return tpl_style_set_dimen:format(name)
+local function format_style_get(primitive, value)
+   if value.only_display then
+      return tpl_style_get_display:format(primitive)
+   elseif value.only_cramped then
+      return tpl_style_get_cramped:format(primitive)
    else
-      return tpl_style_set_int:format(name)
+      return tpl_style_get:format(primitive)
    end
 end
 
+local tpl_style_set = [[
+%s \%s #2 \relax]]
+
+local expression_cmd = {
+   int = "numexpr",
+   dimen = "dimexpr"
+}
+
+local function format_style_set(primitive, value)
+   local vtype = value.type or "dimen"
+   local cmd = expression_cmd[vtype]
+   local get = format_style_get(primitive, value)
+   return tpl_style_set:format(get, cmd)
+end
+
 local tpl_style_macros = [[
-\cs_set_protected_nopar:Npn \fontparams_style_get_%s:N #1 {
+\cs_new_protected_nopar:Npn \fontparams_style_get_%s:N #1 {
 %s
 }
-\cs_set_protected_nopar:Npn \fontparams_style_set_%s:Nn #1 #2 {
+\cs_new_protected_nopar:Npn \fontparams_style_set_%s:Nn #1 #2 {
 %s
 }
 ]]
 
-local function format_style_macros(name, vtype, primitive)
-   local get = format_style_get(primitive, vtype)
-   local set = format_style_set(primitive, vtype)
+local function format_style_macros(name, primitive, value)
+   local get = format_style_get(primitive, value)
+   local set = format_style_set(primitive, value)
    return tpl_style_macros:format(name, get, name, set)
 end
 
-io.output("fontparams-luatex.def")
-io.write(fontparams.compile.tex_license("fontparams-luatex.def"))
+tpl_undefine = [[
+\fontparams_undefine:N \%s
+]]
 
-for key, value in pairs(fontparams.data.params) do
+local function format_undefine(name)
+   return tpl_undefine:format(name)
+end
+
+io.output("fontparams-luatex.def")
+io.write(common.tex_license("fontparams-luatex.def"))
+
+for key, dummy in pairs(params) do
+   local value = common.value(params, key)
    local vtype = value.type or "dimen"
    if type(key) == "string" then
       io.write(format_font_macros(key, vtype))
       local primitive = value.luatex
       if primitive then
-         io.write(format_style_macros(key, vtype, primitive))
+         io.write(format_style_macros(key, primitive, value))
       end
+   end
+   local primitive = dummy.luatex
+   if primitive then
+      io.write(format_undefine(primitive))
    end
 end
 
@@ -162,7 +227,7 @@ end
 
 local primitives = { }
 
-for key, value in pairs(fontparams.data.params) do
+for key, value in pairs(params) do
    local primitive = value.luatex
    if primitive then
       table.insert(primitives, format_primitive(primitive))
@@ -172,6 +237,6 @@ end
 local list = table.concat(primitives, ",\n  ")
 
 io.output("fontparams-primitives.lua")
-io.write(fontparams.compile.lua_license("fontparams-primitives.lua"))
+io.write(common.lua_license("fontparams-primitives.lua"))
 io.write(format_primitive_list(list))
 io.close()
