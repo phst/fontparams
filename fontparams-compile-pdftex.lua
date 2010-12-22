@@ -71,6 +71,10 @@ local function inflate(def, child1, child2)
          end
          result[1] = res
       end
+   elseif type(elem) == "string" then
+      result[1] = {
+         command = elem
+      }
    else
       result[1] = {
          family = "letters",
@@ -100,20 +104,24 @@ local tpl_font_term = [[%.2f \fontdimen %s #1]]
 local tpl_font_term_abs = [[%.2f \fontparams_abs:n { \fontdimen %s #1 }]]
 
 local function format_font_term(term)
-   local factor = term.factor
-   local absolute = term.absolute
-   local number = fontparams.compile.int_const(term.number)
-   if factor then
-      if absolute then
-         return tpl_font_term_abs:format(factor, number)
-      else
-         return tpl_font_term:format(factor, number)
-      end
+   if term.command then
+      return "\\" .. term.command
    else
-      if absolute then
-         return tpl_font_dimen_abs:format(number)
+      local factor = term.factor
+      local absolute = term.absolute
+      local number = fontparams.compile.int_const(term.number)
+      if factor then
+         if absolute then
+            return tpl_font_term_abs:format(factor, number)
+         else
+            return tpl_font_term:format(factor, number)
+         end
       else
-         return tpl_font_dimen:format(number)
+         if absolute then
+            return tpl_font_dimen_abs:format(number)
+         else
+            return tpl_font_dimen:format(number)
+         end
       end
    end
 end
@@ -186,21 +194,25 @@ local families = {
 }
 
 local function format_style_term(term, font)
-   local factor = term.factor
-   local absolute = term.absolute
-   local number = fontparams.compile.int_const(term.number)
-   local fam = fontparams.compile.int_const(families[term.family])
-   if factor then
-      if absolute then
-         return tpl_style_term_abs:format(factor, number, font, fam)
-      else
-         return tpl_style_term:format(factor, number, font, fam)
-      end
+   if term.command then
+      return "\\" .. term.command
    else
-      if absolute then
-         return tpl_style_dimen_abs:format(number, font, fam)
+      local factor = term.factor
+      local absolute = term.absolute
+      local number = fontparams.compile.int_const(term.number)
+      local fam = fontparams.compile.int_const(families[term.family])
+      if factor then
+         if absolute then
+            return tpl_style_term_abs:format(factor, number, font, fam)
+         else
+            return tpl_style_term:format(factor, number, font, fam)
+         end
       else
-         return tpl_style_dimen:format(number, font, fam)
+         if absolute then
+            return tpl_style_dimen_abs:format(number, font, fam)
+         else
+            return tpl_style_dimen:format(number, font, fam)
+         end
       end
    end
 end
@@ -213,7 +225,7 @@ local function format_style_expr(elem, font)
    return table.concat(terms, " + ")
 end
 
-local tpl_style_simple = "%s"
+local tpl_style_simple = "  %s"
 
 local tpl_style_complex = [[
   \cs_if_eq:NNTF #1 \displaystyle { %s } {

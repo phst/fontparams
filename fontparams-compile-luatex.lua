@@ -143,7 +143,7 @@ end
 
 tpl_primitive_list = [[
 luatexbase.provides_module {
-   name = "fontparams.primitives",
+   name = "fontparams-primitives",
    date = "2010/12/21",
    version = "0.1",
    description = "Engine-independent access to font parameters",

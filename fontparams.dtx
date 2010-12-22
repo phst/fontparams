@@ -300,8 +300,8 @@
 %   \meta{name} in the \term{font}.
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \FontParameter #1 #2 {
-  \cs_if_exist:cTF { fontparams_get_font_ #1 :N } {
-    \use:c { fontparams_get_font_ #1 :N } #2
+  \cs_if_exist:cTF { fontparams_font_get_ #1 :N } {
+    \use:c { fontparams_font_get_ #1 :N } #2
   } {
     \msg_error:nnx { fontparams } { unknown-param } { #1 }
   }
@@ -317,8 +317,8 @@
 %   of the parameter.
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \SetFontParameter #1 #2 #3 {
-  \cs_if_exist:cTF { fontparams_set_font_ #1 :Nn } {
-    \use:c { fontparams_set_font_ #1 :Nn } #2 { #3 }
+  \cs_if_exist:cTF { fontparams_font_set_ #1 :Nn } {
+    \use:c { fontparams_font_set_ #1 :Nn } #2 { #3 }
   } {
     \msg_error:nnx { fontparams } { unknown-param } { #1 }
   }
@@ -328,15 +328,15 @@
 %
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \FontParameterByStyle #1 #2 {
-  \cs_if_exist:cTF { fontparams_get_style_ #1 :N } {
-    \use:c { fontparams_get_style_ #1 :N } #2
+  \cs_if_exist:cTF { fontparams_style_get_ #1 :N } {
+    \use:c { fontparams_style_get_ #1 :N } #2
   } {
     \msg_error:nnx { fontparams } { unknown-param } { #1 }
   }
 }
 \cs_new_protected_nopar:Npn \SetFontParameterByStyle #1 #2 #3 {
-  \cs_if_exist:cTF { fontparams_set_style_ #1 :Nn } {
-    \use:c { fontparams_set_style_ #1 :Nn } #2 { #3 }
+  \cs_if_exist:cTF { fontparams_style_set_ #1 :Nn } {
+    \use:c { fontparams_style_set_ #1 :Nn } #2 { #3 }
   } {
     \msg_error:nnx { fontparams } { unknown-param } { #1 }
   }

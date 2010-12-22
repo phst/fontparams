@@ -151,12 +151,29 @@ function inflate(raw)
    end
 end
 
-local function equal_numbers(...)
+local function deep_equal(a, b)
+   if type(a) == type(b) then
+      if type(a) == "table" then
+         for k, v in pairs(a) do
+            if not deep_equal(v, b[k]) then
+               return false
+            end
+         end
+         return true
+      else
+         return a == b
+      end
+   else
+      return false
+   end
+end
+
+local function all_equal(...)
    local length = select("#", ...)
    if length > 0 then
       local first = select(1, ...)
       for index = 2, length do
-         if select(index, ...) ~= first then
+         if not deep_equal(first, select(index, ...)) then
             return false
          end
       end
@@ -165,8 +182,8 @@ local function equal_numbers(...)
 end
 
 function is_simple(def)
-   return equal_numbers(def.display.cramped, def.display.noncramped,
-                        def.nondisplay.cramped, def.nondisplay.noncramped)
+   return all_equal(def.display.cramped, def.display.noncramped,
+                    def.nondisplay.cramped, def.nondisplay.noncramped)
 end
 
 local integer_constants = {
@@ -202,10 +219,14 @@ local integer_constants = {
 }
 
 function int_const(number)
-   local s = integer_constants[number]
-   if s then
-      return "\\c_" .. s
+   if type(number) == "number" then
+      local s = integer_constants[number]
+      if s then
+         return "\\c_" .. s
+      else
+         return number .. "~"
+      end
    else
-      return number .. "~"
+      error("Argument must be a number")
    end
 end

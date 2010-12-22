@@ -32,6 +32,12 @@ local err, warn, info, log = luatexbase.provides_module {
    license = "LPPL v1.3+"
 }
 
+luatexbase.require_module("fontparams-primitives", "2010/12/21")
+
+local tex = tex
+local luatexbase = luatexbase
+local fontparams = fontparams
+
 module("fontparams")
 
 local cramped_styles = {
@@ -43,8 +49,4 @@ local cramped_styles = {
 
 -- TODO: check whether control sequences already defined
 tex.enableprimitives("", cramped_styles)
-
-luatexbase.require_module("fontparams-primitives", "2010/12/21")
-
--- TODO: check whether control sequences already defined
 tex.enableprimitives("", fontparams.primitives.list)

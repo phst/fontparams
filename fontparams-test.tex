@@ -23,26 +23,26 @@
 \newwrite\FontparamsStream
 
 \newcommand*{\FontparamsRow}[1]{%
-  \ifcsname fontparams_get_#1:N\endcsname
+  \ifcsname fontparams_style_get_#1:N\endcsname
   #1
-  & \the\FontParameter{#1}{\displaystyle}
-  & \the\FontParameter{#1}{\crampeddisplaystyle}
-  & \the\FontParameter{#1}{\textstyle}
-  & \the\FontParameter{#1}{\crampedtextstyle}
-  & \the\FontParameter{#1}{\scriptstyle}
-  & \the\FontParameter{#1}{\crampedscriptstyle}
-  & \the\FontParameter{#1}{\scriptscriptstyle}
-  & \the\FontParameter{#1}{\crampedscriptscriptstyle}
+  & \the\FontParameterByStyle{#1}{\displaystyle}
+  & \the\FontParameterByStyle{#1}{\crampeddisplaystyle}
+  & \the\FontParameterByStyle{#1}{\textstyle}
+  & \the\FontParameterByStyle{#1}{\crampedtextstyle}
+  & \the\FontParameterByStyle{#1}{\scriptstyle}
+  & \the\FontParameterByStyle{#1}{\crampedscriptstyle}
+  & \the\FontParameterByStyle{#1}{\scriptscriptstyle}
+  & \the\FontParameterByStyle{#1}{\crampedscriptscriptstyle}
   \immediate\write\FontparamsStream{%
     #1%
-    ;\the\FontParameter{#1}{\displaystyle}%
-    ;\the\FontParameter{#1}{\crampeddisplaystyle}%
-    ;\the\FontParameter{#1}{\textstyle}%
-    ;\the\FontParameter{#1}{\crampedtextstyle}%
-    ;\the\FontParameter{#1}{\scriptstyle}%
-    ;\the\FontParameter{#1}{\crampedscriptstyle}%
-    ;\the\FontParameter{#1}{\scriptscriptstyle}%
-    ;\the\FontParameter{#1}{\crampedscriptscriptstyle}%
+    ;\the\FontParameterByStyle{#1}{\displaystyle}%
+    ;\the\FontParameterByStyle{#1}{\crampeddisplaystyle}%
+    ;\the\FontParameterByStyle{#1}{\textstyle}%
+    ;\the\FontParameterByStyle{#1}{\crampedtextstyle}%
+    ;\the\FontParameterByStyle{#1}{\scriptstyle}%
+    ;\the\FontParameterByStyle{#1}{\crampedscriptstyle}%
+    ;\the\FontParameterByStyle{#1}{\scriptscriptstyle}%
+    ;\the\FontParameterByStyle{#1}{\crampedscriptscriptstyle}%
   }%
   \else
   #1
@@ -147,6 +147,8 @@
 \begin{document}
 
 \maketitle
+
+\errorcontextlines=10
 
 \FontparamsTable
 
