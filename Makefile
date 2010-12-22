@@ -8,6 +8,9 @@ TEX := tex
 LATEX := pdflatex
 MAKEINDEX := makeindex
 
+BASH := bash
+LUA := lua
+
 name := fontparams
 bundle := phst
 
@@ -76,21 +79,21 @@ $(manual): $(source) $(runtime_files)
 	$(LATEX) $(LATEXFLAGS_FINAL) $(source)
 
 $(name).def: $(name)-compile-common.lua $(compile_mod) $(data)
-	./$<
+	$(LUA) $<
 
 $(name)-legacy.def: $(name)-compile-legacy.lua $(compile_mod) $(data)
-	./$<
+	$(LUA) $<
 
 $(name)-luatex.def: $(name)-compile-luatex.lua $(compile_mod) $(data)
-	./$<
+	$(LUA) $<
 
 $(name)-xetex.def: $(name)-compile-xetex.lua $(compile_mod) $(data)
-	./$<
+	$(LUA) $<
 
 $(name)-pdftex.def: $(name)-compile-pdftex.lua $(compile_mod) $(data)
-	./$<
+	$(LUA) $<
 
 check: $(runtime_files) $(test_template)
-	./build-test.sh
+	$(BASH) build-test.sh
 
 .SUFFIXES:
