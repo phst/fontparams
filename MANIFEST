@@ -1,0 +1,30 @@
+This work consists of the non-derived files
+
+README
+README.rst
+MANIFEST
+Makefile
+fontparams.dtx
+fontparams.ins
+fontparams.lua
+fontparams-compile.lua
+fontparams-compile-common.lua
+fontparams-compile-legacy.lua
+fontparams-compile-luatex.lua
+fontparams-compile-xetex.lua
+fontparams-compile-pdftex.lua
+fontparams-data.lua
+fontparams-test.tex
+build-test.sh
+compare-data.py
+fontparams.el
+
+and the derived files
+
+fontparams.sty
+fontparams.def
+fontparams-legacy.def
+fontparams-luatex.def
+fontparams-primitives.lua
+fontparams-xetex.def
+fontparams-pdftex.def
