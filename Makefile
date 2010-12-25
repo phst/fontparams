@@ -9,6 +9,8 @@ LATEX := pdflatex
 MAKEINDEX := makeindex
 
 BASH := bash
+TAR := tar
+ZIP := zip
 LUA := lua
 
 name := fontparams
@@ -44,7 +46,29 @@ generated := $(name).def $(name)-legacy.def $(name)-luatex.def $(name)-xetex.def
 data := $(name)-data.lua
 compile_mod := $(name)-compile.lua
 runtime_files := $(destination) $(lua_module) $(generated)
+doc_class := $(shell kpsewhich phst-doc.cls)
 
+stage_root := texmf
+stage_tex := $(stage_root)/tex/$(branch)
+stage_doc := $(stage_root)/doc/$(branch)
+stage_src := $(stage_root)/source/$(branch)
+
+tds_tex := $(runtime_files)
+tds_doc := $(manual) $(auctex_style)
+tds_generic := Makefile README MANIFEST
+tds_docstrip := $(source) $(driver)
+tds_aux_lua := $(compile_mod) $(data)
+tds_run_lua := $(name)-compile-*.lua
+tds_aux_doc := $(doc_class)
+tds_test := build-test.sh fontparams-test.tex
+tds_src_data := $(tds_generic) $(tds_docstrip) $(tds_aux_lua) $(tds_aux_doc) $(tds_tex)
+tds_src_prog := $(tds_run_lua)
+tds_src := $(tds_src_data) $(tds_src_prog)
+tds_files := $(tds_tex) $(tds_doc) $(tds_src)
+tds_arch := $(name).tds.zip
+
+ctan_files := $(tds_files) $(tds_arch)
+ctan_arch := $(name).zip
 
 all: $(runtime_files) $(auctex_style)
 
@@ -67,6 +91,26 @@ install-pdf: pdf
 	$(MKTEXLSR)
 
 install-complete: install install-pdf
+
+tds: $(tds_arch)
+
+ctan: $(ctan_arch)
+
+check: $(runtime_files) $(test_template)
+	$(BASH) build-test.sh
+
+$(tds_arch): $(tds_files)
+	$(INSTALL) -d $(stage_tex)
+	$(INSTALL_DATA) $(tds_tex) $(stage_tex)
+	$(INSTALL) -d $(stage_doc)
+	$(INSTALL_DATA) $(tds_doc) $(stage_doc)
+	$(INSTALL) -d $(stage_src)
+	$(INSTALL_DATA) $(tds_src_data) $(stage_src)
+	$(INSTALL_PROGRAM) $(tds_src_prog) $(stage_src)
+	$(ZIP) -r $@ $(stage_root)
+
+$(ctan_arch): $(ctan_files)
+	$(ZIP) -j $@ $^
 
 $(destination): $(source) $(driver)
 	$(TEX) $(driver)
@@ -92,8 +136,5 @@ $(name)-xetex.def: $(name)-compile-xetex.lua $(compile_mod) $(data)
 
 $(name)-pdftex.def: $(name)-compile-pdftex.lua $(compile_mod) $(data)
 	$(LUA) $<
-
-check: $(runtime_files) $(test_template)
-	$(BASH) build-test.sh
 
 .SUFFIXES:

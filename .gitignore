@@ -1,7 +1,9 @@
 auto/
+texmf/
 .DS_Store
 *~
 *.tmp
+*.zip
 *.pdf
 *.sty
 *.log
