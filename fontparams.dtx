@@ -59,8 +59,7 @@
 %
 % \GetFileInfo{fontparams.sty}
 %
-% \title{The \thispackage package\thanks{This document corresponds to
-% \thispackage{}~\fileversion, dated~\filedate.}}
+% \title{The \thispackage package\thanks{This document corresponds to \thispackage{}~\fileversion, dated~\filedate.}}
 % \author{Philipp Stephani \\ \mail{st_philipp@yahoo.de}}
 % \date{\filedate}
 %
@@ -182,22 +181,74 @@
 %
 % The \thispackage package should work with a state-of-the art
 % \TeX~distribution such as \TeXLive 2010.  It requires a recent version of the
-% \pkg{expl3} bundle\footnote{\url{http://ctan.org/pkg/expl3}}.  Development
-% versions are hosted on
-% GitHub\footnote{\url{http://github.com/phst/fontparams}}.  Please report all
-% issues at the issue
+% \pkg{expl3} bundle\footnote{\url{http://ctan.org/pkg/expl3}}.  For using the
+% package, only the files \texttt{fontparams.sty} and \texttt{fontparams.lua}
+% and the files ending in \texttt{.def} are required.  The package manual is
+% contained in the file \texttt{fontparams.pdf}.  Development versions are
+% hosted on GitHub\footnote{\url{http://github.com/phst/fontparams}}.  Please
+% report all issues at the issue
 % tracker\footnote{\url{http://github.com/phst/fontparams/issues}}.
 %
 %
 %
 % \section{Interface}
 %
+% Load the \thispackage package with the standard \LaTeXe\ commands:
+% \begin{verbatim}
+% \usepackage{fontparams}
+% \end{verbatim}
+% or (in package or class files):
+% \begin{verbatim}
+% \RequirePackage{fontparams}
+% \end{verbatim}
+% The package does not accept any options.
+%
+% The following description of the package is split up in two part:
+% \autoref{sec:informal} contains informal descriptions for users that don’t
+% want to be bothered with \TeX\ grammar terms; \autoref{sec:formal} formally
+% defines the public interface of the package, and forms its normative
+% description.
+%
+%
+% \subsection{Informal description}
+% \label{sec:informal}
+%
+% Font parameters are either integers or lengths; the font parameter
+% expressions described below may be used wherever \LaTeX\ expects an
+% expression of the respective type.  Examples for integer expressions are
+% \texttt{351} or \cmd{\value}\marg{counter}; examples for length expressions
+% are \texttt{27.4pt} or \cmd{\linewidth}.
+%
+%
+% \subsection{Formal definition}
+% \label{sec:formal}
+%
+%
+% \subsection{Available font parameters}
+% \label{sec:list}
+%
+% \NewDocumentCommand{\FontparamDesc}{mmmmmm}{
+% \item
+%   OpenType name: #1 \\
+%   \Hologo{LuaTeX} primitive: #2 \\
+%   Type: \term{#3} \\
+%   Read access in: #4 \\
+%   Write access in: #5 \\
+%   Description: #6
+% }
+%
+%   \begin{itemize}
+%     \input{fontparams-desc.tex}
+%   \end{itemize}
 %
 %
 % \StopEventually{}
 %
 %
-% \section{Implementation}
+% \section{Technical notes}
+%
+%
+% \section{Implementation of the \LaTeXe\ package}
 %
 % \subsection{Initialization}
 %

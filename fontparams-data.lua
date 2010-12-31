@@ -2,40 +2,50 @@ module("fontparams.data")
 
 params = {
    ScriptPercentScaleDown = {
+      description = "A factor used to downscale lengths in top-level subscripts and superscripts, measured in percent",
       type = "int",
       xetex = 10
    },
    ScriptScriptPercentScaleDown = {
+      description = "A factor used to downscale lengths in second-level subscripts and superscripts, measured in percent",
       type = "int",
       xetex = 11
    },
    DelimitedSubFormulaMinHeight = {
+      description = "Minimum height required for delimited expressions to be treated as a subformula",
       xetex = 12
    },
    DisplayOperatorMinHeight = {
+      description = "Minimum size of large operators like summation or integrals in display mode",
       luatex = "Umathoperatorsize",
       xetex = 13
    },
    MathLeading = {
+      description = "Minimum leading between mathematical formulas",
       xetex = 14
    },
    AxisHeight = {
+      description = "Height of the vertical axis above the baseline",
       luatex = "Umathaxis",
       xetex = 15,
       pdftex = 22
    },
    AccentBaseHeight = {
+      description = "Maximum height of accent base characters that does not require raising the accents",
       xetex = 16
    },
    FlattenedAccentBaseHeight = {
+      description = "Maximum height of accent base characters that does not require flattening the accents",
       xetex = 17
    },
    SubscriptShiftDown = {
+      description = "Standard shift down for subscripts",
       luatex = "Umathsubshiftdown",
       xetex = 18,
       pdftex = 16
    },
    SubscriptTopMax = {
+      description = "Maximum baseline distance for the top of subscripts",
       luatex = "Umathsubtopmax",
       xetex = 19,
       pdftex = {
@@ -45,11 +55,13 @@ params = {
       }
    },
    SubscriptBaselineDropMin = {
+      description = "Minimum drop below the baseline of their bases for non-character subscripts",
       luatex = "Umathsubshiftdrop",
       xetex = 20,
       pdftex = 19
    },
    SuperscriptShiftUp = {
+      description = "Standard shift up for superscripts",
       luatex = "Umathsupshiftup",
       xetex = {
          cramped = 22,
@@ -70,6 +82,7 @@ params = {
       parent = "SuperscriptShiftUp"
    },
    SuperscriptBottomMin = {
+      description = "Minimum baseline distance for the bottom of superscripts",
       luatex = "Umathsupbottommin",
       xetex = 23,
       pdftex = {
@@ -79,11 +92,13 @@ params = {
       }
    },
    SuperscriptBaselineDropMax = {
+      description = "Maximum drop below the baseline of their bases for non-character superscripts",
       luatex = "Umathsupshiftdrop",
       xetex = 24,
       pdftex = 18
    },
    SubSuperscriptGapMin = {
+      description = "Minimum vertical distance between subscripts and superscripts",
       luatex = "Umathsubsupvgap",
       xetex = 25,
       pdftex = {
@@ -93,6 +108,7 @@ params = {
       }
    },
    SuperscriptBottomMaxWithSubscript = {
+      description = "Maximum baseline distance for the bottom of superscripts when a subscript is present",
       luatex = "Umathsupsubbottommax",
       xetex = 26,
       pdftex = {
@@ -102,11 +118,13 @@ params = {
       }
    },
    SpaceAfterScript = {
+      description = "Horizontal white space inserted after subscripts and superscripts",
       luatex = "Umathspaceafterscript",
       xetex = 27,
       pdftex = "scriptspace"
    },
    UpperLimitGapMin = {
+      description = "Minimum vertical distance between the bottom of an upper limit and the top of its operator",
       luatex = "Umathlimitabovevgap",
       xetex = 28,
       pdftex = {
@@ -115,6 +133,7 @@ params = {
       }
    },
    UpperLimitBaselineRiseMin = {
+      description = "Minimum vertical distance between the baseline of an upper limit and the top of its operator",
       luatex = "Umathlimitabovebgap",
       xetex = 29,
       pdftex = {
@@ -123,6 +142,7 @@ params = {
       }
    },
    LowerLimitGapMin = {
+      description = "Minimum vertical distance between the top of an lower limit and the bottom of its operator",
       luatex = "Umathlimitbelowvgap",
       xetex = 30,
       pdftex = {
@@ -131,6 +151,7 @@ params = {
       }
    },
    LowerLimitBaselineDropMin = {
+      description = "Minimum vertical distance between the baseline of an lower limit and the bottom of its operator",
       luatex = "Umathlimitbelowbgap",
       xetex = 31,
       pdftex = {
@@ -139,6 +160,7 @@ params = {
       }
    },
    StackTopShiftUp = {
+      description = "Standard shift up of the top part of a stack",
       luatex = "Umathstacknumup",
       xetex = {
          display = 33,
@@ -154,6 +176,7 @@ params = {
       parent = "StackTopShiftUp"
    },
    StackBottomShiftDown = {
+      description = "Standard shift down of the bottom part of a stack",
       luatex = "Umathstackdenomdown",
       xetex = {
          display = 35,
@@ -169,6 +192,7 @@ params = {
       parent = "StackBottomShiftDown"
    },
    StackGapMin = {
+      description = "Minimum vertical distance between the top and bottom elements of a stack",
       luatex = "Umathstackvgap",
       xetex = {
          display = 37,
@@ -190,6 +214,7 @@ params = {
       parent = "StackGapMin"
    },
    StretchStackTopShiftUp = {
+      description = "Standard shift up of the top part of a stretch stack",
       luatex = "Umathoverdelimiterbgap",
       xetex = 38,
       pdftex = {
@@ -198,6 +223,7 @@ params = {
       }
    },
    StretchStackBottomShiftDown = {
+      description = "Standard shift down of the bottom part of a stretch stack",
       luatex = "Umathunderdelimiterbgap",
       xetex = 39,
       pdftex = {
@@ -206,6 +232,7 @@ params = {
       }
    },
    StretchStackGapAboveMin = {
+      description = "Minimum vertical distance between the stretched element and the bottom of the element above in a stretch stack",
       luatex = "Umathunderdelimitervgap",
       xetex = 40,
       pdftex = {
@@ -214,6 +241,7 @@ params = {
       }
    },
    StretchStackGapBelowMin = {
+      description = "Minimum vertical distance between the stretched element and the bottom of the element below in a stretch stack",
       luatex = "Umathoverdelimitervgap",
       xetex = 41,
       pdftex = {
@@ -222,6 +250,7 @@ params = {
       }
    },
    FractionNumeratorShiftUp = {
+      description = "Standard shift up of fraction numerators",
       luatex = "Umathfractionnumup",
       xetex = {
          display = 43,
@@ -237,6 +266,7 @@ params = {
       parent = "FractionNumeratorShiftUp"
    },
    FractionDenominatorShiftDown = {
+      description = "Standard shift down of fraction denominators",
       luatex = "Umathfractiondenomdown",
       xetex = {
          display = 45,
@@ -252,6 +282,7 @@ params = {
       parent = "FractionDenominatorShiftDown"
    },
    FractionNumeratorGapMin = {
+      description = "Minimum vertical distance between the bottom of the numerator and the fraction rule",
       luatex = "Umathfractionnumvgap",
       xetex = {
          display = 47,
@@ -270,6 +301,7 @@ params = {
       parent = "FractionNumeratorGapMin"
    },
    FractionRuleThickness = {
+      description = "The thickness of the fraction rule",
       luatex = "Umathfractionrule",
       xetex = 48,
       pdftex = {
@@ -278,6 +310,7 @@ params = {
       }
    },
    FractionDenominatorGapMin = {
+      description = "Minimum vertical distance between the top of the denominator and the fraction rule",
       luatex = "Umathfractiondenomvgap",
       xetex = {
          display = 50,
@@ -296,9 +329,11 @@ params = {
       parent = "FractionDenominatorGapMin"
    },
    SkewedFractionHorizontalGap = {
+      description = "Horizontal distance between top and bottom parts of a skewed fraction",
       xetex = 51
    },
    SkewedFractionVerticalGap = {
+      description = "Vertical distance between top and bottom parts of a skewed fraction",
       xetex = 52
    },
    OverbarVerticalGap = {

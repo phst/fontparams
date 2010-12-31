@@ -18,8 +18,27 @@ local type = type
 local tostring = tostring
 local pairs = pairs
 local select = select
+local os = os
+local io = io
 
 module("fontparams.compile")
+
+local version = "0.1"
+
+function deep_all(value, predicate)
+   if predicate(value) then
+      if type(value) == "table" then
+         for k, v in pairs(value) do
+            if not deep_all(v, predicate) then
+               return false
+            end
+         end
+      end
+      return true
+   else
+      return false
+   end
+end
 
 local function deep_equal(a, b)
    if type(a) == type(b) then
@@ -134,7 +153,7 @@ function navigate(root, ...)
    return result
 end
 
-function navigate_default(root, ...)
+local function navigate_default(root, ...)
    local number = select("#", ...)
    local last = select(number, ...)
    local branch = root

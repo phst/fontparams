@@ -23,3 +23,4 @@ texmf/
 test-*.dat
 fontparams*.def
 fontparams-primitives.lua
+fontparams-desc.tex

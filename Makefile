@@ -44,6 +44,7 @@ test_template := $(name)-test.tex
 lua_module := $(name).lua
 generated := $(name).def $(name)-legacy.def $(name)-luatex.def $(name)-xetex.def $(name)-pdftex.def $(name)-primitives.lua
 data := $(name)-data.lua
+doc_descriptions := $(name)-desc.tex
 compile_mod := $(name)-compile.lua
 runtime_files := $(destination) $(lua_module) $(generated)
 doc_class := $(shell kpsewhich phst-doc.cls)
@@ -59,9 +60,9 @@ tds_generic := Makefile README MANIFEST
 tds_docstrip := $(source) $(driver)
 tds_aux_lua := $(compile_mod) $(data)
 tds_run_lua := $(name)-compile-*.lua
-tds_aux_doc := $(doc_class)
-tds_test := build-test.sh fontparams-test.tex
-tds_src_data := $(tds_generic) $(tds_docstrip) $(tds_aux_lua) $(tds_aux_doc) $(tds_tex)
+tds_aux_doc := $(doc_class) $(doc_descriptions)
+tds_test := build-test.sh $(name)-test.tex test-lua-table.tex
+tds_src_data := $(tds_generic) $(tds_docstrip) $(tds_aux_lua) $(tds_aux_doc) $(tds_test)
 tds_src_prog := $(tds_run_lua)
 tds_src := $(tds_src_data) $(tds_src_prog)
 tds_files := $(tds_tex) $(tds_doc) $(tds_src)
@@ -115,7 +116,7 @@ $(ctan_arch): $(ctan_files)
 $(destination): $(source) $(driver)
 	$(TEX) $(driver)
 
-$(manual): $(source) $(runtime_files)
+$(manual): $(source) $(doc_class) $(doc_descriptions) $(runtime_files)
 	$(LATEX) $(LATEXFLAGS_DRAFT) $(source)
 	$(MAKEINDEX) -s $(index_sty) -o $(index_dest) -t $(index_log) $(index_src)
 	$(MAKEINDEX) -s $(changes_sty) -o $(changes_dest) -t $(changes_log) $(changes_src)
@@ -135,6 +136,9 @@ $(name)-xetex.def: $(name)-compile-xetex.lua $(compile_mod) $(data)
 	$(LUA) $<
 
 $(name)-pdftex.def: $(name)-compile-pdftex.lua $(compile_mod) $(data)
+	$(LUA) $<
+
+$(doc_descriptions): $(name)-compile-desc.lua $(compile_mod) $(data)
 	$(LUA) $<
 
 .SUFFIXES:

@@ -13,7 +13,9 @@ fontparams-compile-legacy.lua
 fontparams-compile-luatex.lua
 fontparams-compile-xetex.lua
 fontparams-compile-pdftex.lua
+fontparams-compile-desc.lua
 fontparams-data.lua
+test-lua-table.tex
 fontparams-test.tex
 build-test.sh
 compare-data.py
@@ -28,3 +30,4 @@ fontparams-luatex.def
 fontparams-primitives.lua
 fontparams-xetex.def
 fontparams-pdftex.def
+fontparams-desc.tex
