@@ -21,43 +21,54 @@ require("fontparams-compile")
 local params = fontparams.data.params
 local common = fontparams.compile
 
+local opentype_translations = {
+   FractionNumDisplayStyleGapMin = "FractionNumeratorDisplayStyleGapMin",
+   FractionDenomDisplayStyleGapMin = "FractionDenominatorDisplayStyleGapMin"
+}
+
+local function translate_opentype(name)
+   return opentype_translations[name] or name
+end
+
 local tpl_font_get_dimen = [[
   \dimexpr
   \lua_now:x {
-    tex.sprint(font.getfont(font.id(" \cs_to_str:N #1 ")).MathConstants.%s)
+    fontparams.print_value(" \cs_to_str:N #1 ", %q)
   } sp
   \relax]]
 
 local tpl_font_get_int = [[
   \numexpr
   \lua_now:x {
-    tex.sprint(font.getfont(font.id(" \cs_to_str:N #1 ")).MathConstants.%s)
+    fontparams.print_value(" \cs_to_str:N #1 ", %q)
   }
   \relax]]
 
 local function format_font_get(name, vtype)
+   local internal = translate_opentype(name)
    if vtype == "dimen" then
-      return tpl_font_get_dimen:format(name)
+      return tpl_font_get_dimen:format(internal)
    else
-      return tpl_font_get_int:format(name)
+      return tpl_font_get_int:format(internal)
    end
 end
 
 local tpl_font_set_dimen = [[
   \lua_now:x {
-    font.getfont(font.id(" \cs_to_str:N #1 ")).MathConstants.%s = \number \dimexpr #2 \relax
+    fontparams.set_value(" \cs_to_str:N #1 ", %q, \number \dimexpr #2 \relax)
   }]]
 
 local tpl_font_set_int = [[
   \lua_now:x {
-    font.getfont(font.id(" \cs_to_str:N #1 ")).MathConstants.%s = \number \numexpr #2 \relax
+    fontparams.set_value(" \cs_to_str:N #1 ", %q, \number \numexpr #2 \relax)
   }]]
 
 local function format_font_set(name, vtype)
+   local internal = translate_opentype(name)
    if vtype == "dimen" then
-      return tpl_font_set_dimen:format(name)
+      return tpl_font_set_dimen:format(internal)
    else
-      return tpl_font_set_int:format(name)
+      return tpl_font_set_int:format(internal)
    end
 end
 
