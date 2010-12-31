@@ -164,8 +164,7 @@ end
 
 local primitives = { }
 
-io.output("fontparams-xetex.def")
-io.write(common.tex_license("fontparams-xetex.def"))
+common.output_tex("fontparams-xetex.def", "Font parameter definitions for XeTeX")
 
 for key, dummy in pairs(params) do
    local primitive = dummy.luatex

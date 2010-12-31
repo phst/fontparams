@@ -316,8 +316,7 @@ end
 
 local primitives = { }
 
-io.output("fontparams-pdftex.def")
-io.write(common.tex_license("fontparams-pdftex.def"))
+common.output_tex("fontparams-pdftex.def", "Font parameter definitions for TFM-based fonts")
 
 for key, dummy in pairs(params) do
    local value = common.value(params, key)

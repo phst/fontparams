@@ -169,8 +169,7 @@ local function format_undefine(name)
    return tpl_undefine:format(name)
 end
 
-io.output("fontparams-luatex.def")
-io.write(common.tex_license("fontparams-luatex.def"))
+common.output_tex("fontparams-luatex.def", "Font parameter definitions for LuaTeX")
 
 for key, dummy in pairs(params) do
    local value = common.value(params, key)
@@ -226,7 +225,6 @@ end
 
 local list = table.concat(primitives, ",\n  ")
 
-io.output("fontparams-primitives.lua")
-io.write(common.lua_license("fontparams-primitives.lua"))
+common.output_lua("fontparams-primitives.lua")
 io.write(format_primitive_list(list))
 io.close()

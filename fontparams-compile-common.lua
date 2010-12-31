@@ -32,8 +32,7 @@ local function format_macros(name)
    return tpl_macros:format(name, name, name, name)
 end
 
-io.output("fontparams.def")
-io.write(common.tex_license("fontparams.def"))
+common.output_tex("fontparams.def", "Font parameter definitions")
 
 for key, value in pairs(params) do
    if type(key) == "string" then

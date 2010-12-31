@@ -29,8 +29,7 @@ local function format_primitive(name)
    return tpl_primitive:format(name)
 end
 
-io.output("fontparams-legacy.def")
-io.write(common.tex_license("fontparams-legacy.def"))
+common.output_tex("fontparams-legacy.def", "Font parameter definitions for non-LuaTeX engines")
 
 for key, value in pairs(params) do
    local primitive = value.luatex

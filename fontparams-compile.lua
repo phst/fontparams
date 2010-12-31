@@ -90,46 +90,58 @@ local function merge(a, b)
    return result
 end
 
-local tpl_tex_license = [[
-%% %s
-%% Copyright 2010 Philipp Stephani
-%%
-%% This work may be distributed and/or modified under the
-%% conditions of the LaTeX Project Public License, either version 1.3c
-%% of this license or (at your option) any later version.
-%% The latest version of this license is in
-%%   http://www.latex-project.org/lppl.txt
-%% and version 1.3c or later is part of all distributions of LaTeX
-%% version 2009/09/24 or later.
-%%
-%% This work has the LPPL maintenance status `maintained'.
-%% The Current Maintainer of this work is Philipp Stephani.
-%% This work consists of all files listed in MANIFEST.
-]]
+local comment_prefixes = {
+   tex = "%%",
+   lua = "--"
+}
 
-function tex_license(filename)
-   return tpl_tex_license:format(filename)
+local function add_comment(text, language)
+   local prefix = comment_prefixes[language]
+   text = text:gsub("[^\n]+\n", prefix .. " %0")
+   text = text:gsub("\n\n", "\n" .. prefix .. "\n")
+   return text
 end
 
-local tpl_lua_license = [[
--- %s
--- Copyright 2010 Philipp Stephani
---
--- This work may be distributed and/or modified under the
--- conditions of the LaTeX Project Public License, either version 1.3c
--- of this license or (at your option) any later version.
--- The latest version of this license is in
---   http://www.latex-project.org/lppl.txt
--- and version 1.3c or later is part of all distributions of LaTeX
--- version 2009/09/24 or later.
---
--- This work has the LPPL maintenance status `maintained'.
--- The Current Maintainer of this work is Philipp Stephani.
--- This work consists of all files listed in MANIFEST.
+local license = [[
+Copyright 2010 Philipp Stephani
+
+This work may be distributed and/or modified under the
+conditions of the LaTeX Project Public License, either version 1.3c
+of this license or (at your option) any later version.
+The latest version of this license is in
+  http://www.latex-project.org/lppl.txt
+and version 1.3c or later is part of all distributions of LaTeX
+version 2009/09/24 or later.
+
+This work has the LPPL maintenance status `maintained'.
+The Current Maintainer of this work is Philipp Stephani.
+This work consists of all files listed in MANIFEST.
+]]
+-- '
+
+local function format_header(filename, language)
+   local header = filename .. "\n" .. license
+   return add_comment(header, language)
+end
+
+function output_lua(filename, executable)
+   io.output(filename)
+   if executable then
+      io.write("#!/usr/bin/env lua\n\n")
+   end
+   io.write(format_header(filename, "lua"))
+   io.write("\n")
+end
+
+local date = os.date("%Y/%m/%d")
+local tpl_provides_file = [[
+\ProvidesExplFile { %s } { %s } { %s } { %s }
 ]]
 
-function lua_license(filename)
-   return tpl_lua_license:format(filename)
+function output_tex(filename, description)
+   io.output(filename)
+   io.write(format_header(filename, "tex"))
+   io.write(tpl_provides_file:format(filename, date, version, description))
 end
 
 function navigate(root, ...)
