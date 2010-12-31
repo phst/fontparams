@@ -10,14 +10,10 @@
 -- version 2009/09/24 or later.
 --
 -- This work has the LPPL maintenance status `maintained'.
---
--- The Current Maintainer of this work is Philipp Stephani.
---
--- This work has the LPPL maintenance status `maintained'.
 -- The Current Maintainer of this work is Philipp Stephani.
 -- This work consists of all files listed in MANIFEST.
 
-local err, warn, info, log = luatexbase.provides_module {
+local err = luatexbase.provides_module {
    name = "fontparams",
    date = "2010/12/21",
    version = "0.1",
@@ -28,6 +24,7 @@ local err, warn, info, log = luatexbase.provides_module {
 
 luatexbase.require_module("fontparams-primitives", "2010/12/21")
 
+local font = font
 local tex = tex
 local primitives = fontparams.primitives.list
 
@@ -43,4 +40,39 @@ local cramped_styles = {
 function activate_primitives()
    tex.enableprimitives("", cramped_styles)
    tex.enableprimitives("", primitives)
+end
+
+local function get_constants(font_name)
+   local id = font.id(font_name)
+   if id then
+      local fnt = font.getfont(id)
+      if fnt then
+         local const = fnt.MathConstants
+         if const then
+            return const
+         else
+            err("Font \\%s has no mathematical font parameter table", font_name)
+         end
+      else
+         err("Unknown font identifier %d", id)
+      end
+   else
+      err("Unknown font \\%s", font_name)
+   end
+end
+
+function print_value(font_name, param_name)
+   local const = get_constants(font_name)
+   local val = const[param_name]
+   if val then
+      local res = tostring(val)
+      tex.sprint(luatexbase.catcodetables.string, res)
+   else
+      err("Font \\%s does not contain font parameter %s", font_name, param_name)
+   end
+end
+
+function set_value(font_name, param_name, value)
+   local const = get_constants(font_name)
+   const[param_name] = value
 end
