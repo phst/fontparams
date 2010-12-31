@@ -1,0 +1,23 @@
+\input luaotfload.sty \relax
+\font\cambria={name:Cambria Math:script=MATH}\relax
+\directlua{%
+  require("fontparams-data")
+  print()
+  print()
+  local fnt = font.getfont(font.id("cambria"))
+  local lua_data = fnt.MathConstants
+  local my_data = fontparams.data.params
+  for k, v in pairs(lua_data) do
+    if not my_data[k] then
+      print("Parameter " .. k .. " is present in font, but not in table")
+    end
+  end
+  print()
+  for k, v in pairs(my_data) do
+    if type(k) == "string" and not lua_data[k] then
+      print("Parameter " .. k .. " is present in table, but not in font")
+    end
+  end
+  print()
+}
+\bye
