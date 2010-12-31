@@ -457,7 +457,7 @@ params = {
          nondisplay = 21
       }
    },
-   FractionDelimiterDisplaySize = {
+   FractionDelimiterDisplayStyleSize = {
       only_display = true,
       parent = "FractionDelimiterSize"
    },
