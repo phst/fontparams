@@ -21,6 +21,16 @@ require("fontparams-compile")
 local params = fontparams.data.params
 local common = fontparams.compile
 
+local tpl_describe_macro = [[\DescribeMacro{\%s}]]
+
+local function format_describe_macro(name)
+   if name then
+      return tpl_describe_macro:format(name)
+   else
+      return ""
+   end
+end
+
 local tpl_opentype_name = [[\texttt{%s}]]
 
 local function format_opentype_name(key)
@@ -31,11 +41,11 @@ local function format_opentype_name(key)
    end
 end
 
-local tpl_luatex_name = [[\cs{%s} \DescribeMacro{\%s}]]
+local tpl_luatex_name = [[\cs{%s}]]
 
 local function format_luatex_name(name)
    if name then
-      return tpl_luatex_name:format(name, name)
+      return tpl_luatex_name:format(name)
    else
       return "—"
    end
@@ -60,6 +70,7 @@ local xetex_logo = [[\hologo{XeTeX}]]
 local pdftex_logo = [[\hologo{pdfTeX}]]
 
 for key, dummy in pairs(params) do
+   local describe_macro = format_describe_macro(dummy.luatex)
    local value = common.value(params, key)
    local opentype_name = format_opentype_name(key)
    local luatex_name = format_luatex_name(value.luatex)
@@ -82,8 +93,16 @@ for key, dummy in pairs(params) do
    end
    local readable = table.concat(read, ", ")
    local writable = table.concat(write, ", ")
-   local description = value.description or ""
-   table.insert(result, {opentype_name, luatex_name, term, readable, writable, description})
+   local description = value.description
+   if not description then
+      error("Parameter " .. key .. " has no description")
+   end
+   if dummy.only_display then
+      description = description .. " (only display styles)"
+   elseif dummy.only_cramped then
+      description = description .. " (only cramped styles)"
+   end
+   table.insert(result, {opentype_name, luatex_name, describe_macro, term, readable, writable, description})
 end
 
 local function lexicographical_compare(a, b)
@@ -98,7 +117,7 @@ end
 table.sort(result, lexicographical_compare)
 
 local tpl_row = [[
-\FontparamDesc{%s}{%s}{%s}{%s}{%s}{%s}
+\FontparamDesc{%s}{%s}{%s}{%s}{%s}{%s}{%s}
 ]]
 
 io.output("fontparams-desc.tex")

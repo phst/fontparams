@@ -1,7 +1,7 @@
 % \iffalse meta-comment
 %
 % fontparams.dtx
-% Copyright 2010 Philipp Stephani
+% Copyright 2010, 2011 Philipp Stephani
 %
 % This work may be distributed and/or modified under the
 % conditions of the LaTeX Project Public License, either version 1.3c
@@ -230,14 +230,14 @@
 % \subsection{Available font parameters}
 % \label{sec:list}
 %
-% \NewDocumentCommand{\FontparamDesc}{mmmmmm}{
+% \NewDocumentCommand{\FontparamDesc}{mmmmmmm}{
 % \item
-%   OpenType name: #1 \\
+%   OpenType name: #1 #3 \\
 %   \Hologo{LuaTeX} primitive: #2 \\
-%   Type: \term{#3} \\
-%   Read access in: #4 \\
-%   Write access in: #5 \\
-%   Description: #6
+%   Type: \term{#4} \\
+%   Read access in: #5 \\
+%   Write access in: #6 \\
+%   Description: #7
 % }
 %
 %   \begin{itemize}
@@ -260,7 +260,7 @@
 %<*package>
 \NeedsTeXFormat{LaTeX2e}[2009/09/24]
 \RequirePackage{expl3}[2010/10/02]
-\ProvidesExplPackage{fontparams}{2010/12/21}{0.1}%
+\ProvidesExplPackage{fontparams}{2011/01/03}{0.1}%
   {Unified font parameter access}
 %    \end{macrocode}
 %
