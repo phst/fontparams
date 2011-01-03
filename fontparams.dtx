@@ -142,6 +142,24 @@
 % consistent and modern interface based on additional primitives.  The
 % \thispackage package follows the \hologo{LuaTeX} way as far as possible.
 %
+%
+% \section{Usage notes}
+%
+% The \thispackage package should work with a state-of-the art
+% \TeX~distribution such as \TeXLive 2010.  It requires \LaTeXe\ and a recent
+% version of the \pkg{expl3} bundle\footnote{\url{http://ctan.org/pkg/expl3}}.
+% For using the package, only the files \texttt{fontparams.sty} and
+% \texttt{fontparams.lua} and the files ending in \texttt{.def} are required.
+% The package supports the engines \hologo{pdfTeX}, \hologo{XeTeX} and
+% \hologo{LuaTeX}.  The package manual is contained in the file
+% \texttt{fontparams.pdf}.  Development versions are hosted on
+% GitHub\footnote{\url{http://github.com/phst/fontparams}}.  Please report all
+% issues at the issue
+% tracker\footnote{\url{http://github.com/phst/fontparams/issues}}.
+%
+%
+% \section{Limitations}
+%
 % It is important to realize that not only the interfaces, but also the
 % capabilities of the engines differ; while \thispackage tries hard to provide
 % a consistent interface to the available font parameters, it cannot do magic:
@@ -185,19 +203,11 @@
 %   selected.
 % \end{itemize}
 %
-%
-% \section{Usage notes}
-%
-% The \thispackage package should work with a state-of-the art
-% \TeX~distribution such as \TeXLive 2010.  It requires a recent version of the
-% \pkg{expl3} bundle\footnote{\url{http://ctan.org/pkg/expl3}}.  For using the
-% package, only the files \texttt{fontparams.sty} and \texttt{fontparams.lua}
-% and the files ending in \texttt{.def} are required.  The package manual is
-% contained in the file \texttt{fontparams.pdf}.  Development versions are
-% hosted on GitHub\footnote{\url{http://github.com/phst/fontparams}}.  Please
-% report all issues at the issue
-% tracker\footnote{\url{http://github.com/phst/fontparams/issues}}.
-%
+% In general, querying font parameters should work in almost all cases, while
+% setting them often depends on engine specifics that cannot be abstracted
+% away, or on circumstances that are outside the control of the \thispackage
+% package.  The package provides a thin wrapper around the engine-speficic
+% low-level interfaces, but cannot guarantee to behave as expected.
 %
 %
 % \section{Interface}
@@ -212,11 +222,11 @@
 % \end{verbatim}
 % The package does not accept any options.
 %
-% The following description of the package is split up in two part:
+% The following documentation of the package interface is split in two parts:
 % \autoref{sec:informal} contains informal descriptions for users that don’t
-% want to be bothered with \TeX\ grammar terms; \autoref{sec:formal} formally
-% defines the public interface of the package, and forms its normative
-% description.
+% want to be bothered with \TeX\ grammar terms; \autoref{sec:rigorous}
+% rigorously defines the public interface of the package, and forms its
+% normative description.
 %
 %
 % \subsection{Informal description}
@@ -350,7 +360,7 @@
     }
 %    \end{macrocode}
 % \cmd{\cs_if_exists:N} treats control sequences equal to \cmd{\relax} as
-% undefined, but \verb|tex.enableprimitives| does not.  So we always explicitly
+% undefined, but |tex.enableprimitives| does not.  So we always explicitly
 % undefine the control sequence.
 %    \begin{macrocode}
     \cs_undefine:N #1
