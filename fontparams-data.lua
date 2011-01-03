@@ -352,6 +352,7 @@ params = {
       xetex = 52
    },
    OverbarVerticalGap = {
+      description = "Vertical distance between an overbar and the top of its base",
       luatex = "Umathoverbarvgap",
       xetex = 53,
       pdftex = {
@@ -361,6 +362,7 @@ params = {
       }
    },
    OverbarRuleThickness = {
+      description = "Thickness of overbar rules",
       luatex = "Umathoverbarrule",
       xetex = 54,
       pdftex = {
@@ -369,6 +371,7 @@ params = {
       }
    },
    OverbarExtraAscender = {
+      description = "Additional white space reserved above overbars",
       luatex = "Umathoverbarkern",
       xetex = 55,
       pdftex = {
@@ -377,6 +380,7 @@ params = {
       }
    },
    UnderbarVerticalGap = {
+      description = "Vertical distance between an underbar and bottom top of its base",
       luatex = "Umathunderbarvgap",
       xetex = 56,
       pdftex = {
@@ -386,6 +390,7 @@ params = {
       }
    },
    UnderbarRuleThickness = {
+      description = "Thickness of underbar rules",
       luatex = "Umathunderbarrule",
       xetex = 57,
       pdftex = {
@@ -394,6 +399,7 @@ params = {
       }
    },
    UnderbarExtraDescender = {
+      description = "Additional white space reserved below underbars",
       luatex = "Umathunderbarkern",
       xetex = 58,
       pdftex = {
@@ -402,6 +408,7 @@ params = {
       }
    },
    RadicalVerticalGap = {
+      description = "Vertical space between the radical rule and the radicand",
       luatex = "Umathradicalvgap",
       xetex = {
          display = 59,
@@ -442,10 +449,12 @@ params = {
       parent = "RadicalVerticalGap"
    },
    RadicalRuleThickness = {
+      description = "Thickness of radical rules",
       luatex = "Umathradicalrule",
       xetex = 61
    },
    RadicalExtraAscender = {
+      description = "Additional white space reserved above radicals",
       luatex = "Umathradicalkern",
       xetex = 62,
       pdftex = {
@@ -454,18 +463,22 @@ params = {
       }
    },
    RadicalKernBeforeDegree = {
+      description = "Horizontal kern before radical degrees",
       luatex = "Umathradicaldegreebefore",
       xetex = 63
    },
    RadicalKernAfterDegree = {
+      description = "Negative horizontal kern after radical degrees",
       luatex = "Umathradicaldegreeafter",
       xetex = 64
    },
    RadicalDegreeBottomRaisePercent = {
+      description = "Percentage of the radical symbols ascender that the bottom of the degree is raised",
       luatex = "Umathradicaldegreeraise",
       xetex = 65
    },
    FractionDelimiterSize = {
+      description = "Minimum delimiter size for stacks or fractions with delimiters",
       luatex = "Umathfractiondelsize",
       pdftex = {
          display = 20,
@@ -477,6 +490,7 @@ params = {
       parent = "FractionDelimiterSize"
    },
    {
+      description = "Space reserved above the limit of an operator",
       luatex = "Umathlimitabovekern",
       pdftex = {
          family = "symbols",
@@ -484,6 +498,7 @@ params = {
       }
    },
    {
+      description = "Space reserved below the limit of an operator",
       luatex = "Umathlimitbelowkern",
       pdftex = {
          family = "symbols",
@@ -491,14 +506,17 @@ params = {
       }
    },
    {
+      description = "Width of 18 mathematical units",
       luatex = "Umathquad",
       pdftex = 6
    },
    SubscriptShiftDownWithSuperscript = {
+      description = "Vertical shift down of a subscript if a superscript is present",
       luatex = "Umathsubsupshiftdown",
       pdftex = 17
    },
    MinConnectorOverlap = {
+      description = "Minimum overlap of connectors in an extensible recipe",
       luatex = "Umathconnectoroverlapmin"
    }
 }
