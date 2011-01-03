@@ -209,7 +209,7 @@ end
 tpl_primitive_list = [[
 luatexbase.provides_module {
    name = "fontparams-primitives",
-   date = "2010/12/21",
+   date = "%s",
    version = "0.1",
    description = "Engine-independent access to font parameters",
    author = "Philipp Stephani",
@@ -222,7 +222,7 @@ list = {
 ]]
 
 local function format_primitive_list(list)
-   return tpl_primitive_list:format(list)
+   return tpl_primitive_list:format(common.date, list)
 end
 
 local primitives = { }

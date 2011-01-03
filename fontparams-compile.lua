@@ -1,5 +1,5 @@
 -- fontparams-compile.lua
--- Copyright 2010 Philipp Stephani
+-- Copyright 2010, 2011 Philipp Stephani
 --
 -- This work may be distributed and/or modified under the
 -- conditions of the LaTeX Project Public License, either version 1.3c
@@ -103,7 +103,7 @@ local function add_comment(text, language)
 end
 
 local license = [[
-Copyright 2010 Philipp Stephani
+Copyright 2010, 2011 Philipp Stephani
 
 This work may be distributed and/or modified under the
 conditions of the LaTeX Project Public License, either version 1.3c
@@ -133,7 +133,8 @@ function output_lua(filename, executable)
    io.write("\n")
 end
 
-local date = os.date("%Y/%m/%d")
+date = os.date("%Y/%m/%d")
+
 local tpl_provides_file = [[
 \ProvidesExplFile { %s } { %s } { %s } { %s }
 ]]
