@@ -15,7 +15,7 @@
 
 local module_info = {
    name = "fontparams",
-   date = "2010/12/21",
+   date = "2011/01/03",
    version = "0.1",
    description = "Engine-independent access to font parameters",
    author = "Philipp Stephani",
