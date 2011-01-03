@@ -238,14 +238,346 @@
 % expressions described below may be used wherever \LaTeX\ expects an
 % expression of the respective type.  Examples for integer expressions are
 % \texttt{351} or \cmd{\value}\marg{counter}; examples for length expressions
-% are \texttt{27.4pt} or \cmd{\linewidth}.
+% are \texttt{27.4pt} or \cmd{\linewidth}.  In \autoref{sec:list}, integer
+% parameters are denoted by \enquote{Type:~\term{number}}, and length
+% parameters are denoted by \enquote{Type:~\term{dimen}}.
+%
+% There are two established naming schemes for font parameters: the names
+% described in the official documentation for the mathematical features of
+% OpenType fonts as defined by Microsoft; and the primitives that
+% \hologo{LuaTeX} provides.  Rather than trying to establish a new interface,
+% \thispackage package tries its best to bring support for both naming schemes
+% to all supported engines.
+%
+% Naturally, font parameters are bound to a certain font.  However, it is more
+% common to ask for the current value of a mathematical font parameter
+% belonging to a font that is uses to typeset a certain \emph{mathematical
+% style}.  Therefore the \thispackage package also supports querying and
+% setting mathematical font parameters according to a given mathematical style.
+%
+% \TeX\ knows eight mathematical styles, which are assigned pairwise to the
+% four different mathematical expression sizes that are selected by context or
+% explicit user choice.  These four sizes are used to typeset expressions in
+% displayed equations, inline equations, top-level subscripts and superscripts,
+% and second-level subscripts and superscripts, respectively.  The characters
+% of the display and text styles don’t differ by size, but two-dimensional
+% objects such as fractions are typeset differently:
+% \begin{equation*}
+%   \dfrac12 \text{ (display style)} \qquad \text{vs.} \qquad
+%   \tfrac12 \text{ (text style).}
+% \end{equation*}
+% Text, top-level script, and second-level script styles are collectively
+% denoted by the name \emph{non-display styles}.
+%
+% To each of these sizes belong two mathematical styles: \emph{non-cramped} and
+% \emph{cramped}.  The non-cramped styles are generally used terms outside
+% two-dimensional constructs and fraction numerators; whereas the cramped
+% styles distinguish themselves by their superscripts being typeset at a lower
+% vertical position and are used for fraction denominators, radicands, and
+% similar constructs where space at the top is not unlimited.
+%
+% \DescribeMacros{\displaystyle \textstyle \scriptstyle \scriptscriptstyle
+% \crampeddisplaystyle \crampedtextstyle \crampedscriptstyle
+% \crampedscriptscriptstyle}
+% The correct mathematical style is usually chosen automatically, but can also
+% be specified by the user via low-level switch commands.  \TeX\ has only
+% switches for the non-cramped styles: \cmd{\displaystyle}, \cmd{\textstyle},
+% \cmd{\scriptstyle}, and \cmd{\scriptscriptstyle}; but \hologo{LuaTeX}
+% introduces commands for the cramped styles as well:
+% \cmd{\crampeddisplaystyle}, \cmd{\crampedtextstyle},
+% \cmd{\crampedscriptstyle}, and \cmd{\crampedscriptscriptstyle}.  The
+% \thispackage package uses these command names to distiguish between
+% mathematical styles where necessary.  The commands for the cramped styles are
+% made available for \hologo{XeTeX} and \hologo{pdfTeX} as well, but only for
+% the purpose of the \thispackage package; you should never use them for other
+% purposes.
+%
+% \DescribeMacro{\FontParameter}
+% The command \cmd{\FontParameter}\marg{name}\marg{font} queries the font
+% represented by \meta{font} for the parameter with the OpenType name
+% \meta{name}.  The \meta{font} must be a valid font identifier, \eg, |\font|
+% for the current font, |\textfont 2| for the text-style font in the
+% mathematical group~2, or a font command declared by the \LaTeXe\ command
+% \cmd{\DeclareFixedFont}.  Depending on the type of the parameter, it can be
+% used wherever \LaTeX\ expects an integer or a length variable.  For printing
+% a parameter value, prefix the \cmd{\FontParameter} command by \cmd{\the}.  As
+% an example, if \Robertson’s \pkg{fontspec} package is loaded, the following
+% code snipped prints the width of the fraction bar defined in the font
+% \fnt{Cambria Math}:
+%\begin{verbatim}
+%\fontspec{Cambria Math}
+%\the\FontParameter{FractionRuleThickness}{\font}
+%\end{verbatim}
+% This command only works if the parameter name is listed in
+% \autoref{sec:list}, and if the parameter is readable in the running engine.
+%
+% \DescribeMacro{\SetFontParameter}
+% The command \cmd{\SetFontParameter}\marg{name}\marg{font}\marg{value} sets
+% the font parameter with the OpenType name \meta{name} in the font \meta{font}
+% to the new value \meta{value}.  The type of the \meta{value} must correspond
+% to the type of the parameter.  This command only works if the parameter name
+% is listed in \autoref{sec:list}, and if the parameter is writable in the
+% running engine.
+%
+% \DescribeMacro{\FontParameterByStyle}
+% The command \cmd{\FontParameterByStyle}\marg{name}\marg{style} queries the
+% font currently selected for the mathematical style represented by
+% \meta{style} for the fonr parameter with the OpenType name \meta{name}.
+% \meta{style} must be one of the style switches discussed above; otherwise,
+% the command behaves identical to the \cmd{\FontParameter} command.  For
+% example, if \Robertson’s \pkg{unicode-math} package has been loaded, the
+% following code snippets prints the vertical shift of superscripts for the
+% non-cramped and cramped display styles:
+%\begin{verbatim}
+%\setmathfont{Cambria Math}
+%$x$
+%\the\FontParameterByStyle{SuperscriptShiftUp}{\displaystyle}\quad
+%\the\FontParameterByStyle{SuperscriptShiftUp}{\crampeddisplaystyle}
+%\end{verbatim}
+% Note that the values are only correct after some mathematical expression has
+% been typeset because \LaTeXe\ initializes mathematical fonts only when
+% needed.  If you run this snippet, you should find that the vertical shift is
+% smaller for the cramped style.
+%
+% \DescribeMacro{\SetFontParameterByStyle}
+% Likewise, a font parameter corresponding to a certain style can be set using
+% the command
+% \cmd{\SetFontParameterByStyle}\marg{name}\marg{style}\marg{value}.
+%
+% \DescribeMacros{\ActivateOpenTypeFontParameters
+% \ActivateLegacyFontParameters}
+% If and only if \hologo{XeTeX} is the current engine, the two parameterless
+% commands \cmd{\ActivateOpenTypeFontParameters} and
+% \cmd{\ActivateLegacyFontParameters} are defined.  They select the apropriate
+% definitions for OpenType fonts with a mathematical font parameter table and
+% other fonts.  Directly after the \thispackage package is loaded, the legacy
+% definitions are activated, but if you load an OpenType mathematical font
+% (\eg, by using \cmd{\setmathfont} from \Robertson’s \pkg{unicode-math}
+% package), you need to inform \hologo{XeTeX} explicitly about this fact via
+% \cmd{\ActivateOpenTypeFontParameters}.  The two commands may be used any
+% number of times.  \Hologo{LuaTeX} supports these two kinds of fonts, too, but
+% it unifies access to font parameters already at the engine level, so no
+% manual switching is required.
 %
 %
-% \subsection{Formal definition}
-% \label{sec:formal}
+% \subsection{Rigorous definition}
+% \label{sec:rigorous}
+%
+% The following discussions use the term \enquote{undefined behavior} in the
+% same sense as the C~standard does.  Furthermore, every behavior within the
+% scope of the \thispackage package that is not explicitly defined is taken to
+% be undefined.  Notions in \textcolor{term}{green} refer to nonterminal
+% symbols from the \hologo{TeX} grammar, as described in the \TeX book, the
+% \eTeX\ manual, and the manuals of the supported engines.  Other parameter
+% specifiers must generally fulfill the definition of \term{balanced text}.
+% All braces must be explicit character tokens of category~1 or~2 (in contrast
+% to the \TeX book, where~|{| and~|}| usually denote braces that can be
+% implicit).  Expansion is only performed if explicitly noted; for example, if
+% a \term{font} is expected, a token list that does not conform to the
+% definition of \term{font} would be invalid even if its expansion conformed to
+% that definition, unless stated otherwise.
+%
+% \DescribeMacros{\crampeddisplaystyle \crampedtextstyle \crampedscriptstyle
+% \crampedscriptscriptstyle}
+% \emph{\Hologo{pdfTeX} and \hologo{XeTeX} only:} The control sequences
+% \cmd{\crampeddisplaystyle}, \cmd{\crampedtextstyle},
+% \cmd{\crampedscriptstyle}, and \cmd{\crampedscriptscriptstyle} are defined as
+% opaque entities distinct from all other control sequences.  They are intended
+% to be used as a \meta{style token} (described below), but any other use
+% (including, but not limited to, expanding, writing to a file or the terminal,
+% and typesetting) results in undefined behavior.  In particular, they cannot
+% be used to switch to a particular mathematical style.
+%
+% \DescribeNonterminal{font argument}
+% For convenience, we define \meta{font argument} as follows:
+% \begin{equation*}
+%   \meta{font argument} \Coloneqq
+%   \term{left brace} \term{font} \term{right brace}
+%   \mid \cmd{\font} \mid \term{fontdef token}.
+% \end{equation*}
+%
+% \DescribeNonterminal{style token}
+% For \hologo{LuaTeX}, a \meta{style token} is defined as a control sequence
+% token whose meaning is equal to one of the style-switching primitives
+% \cmd{\displaystyle}, \cmd{\crampeddisplay\-style}, \cmd{\textstyle},
+% \cmd{\crampedtextstyle}, \cmd{\scriptstyle}, \cmd{\crampedscriptstyle},
+% \cmd{\scriptscriptstyle}, and \cmd{\crampedscriptscriptstyle}.  For
+% \hologo{XeTeX} and \hologo{pdfTeX}, a \meta{style token} is a token whose
+% meaning is equal to one of the style-switching primitives
+% \cmd{\displaystyle}, \cmd{\textstyle}, \cmd{\scriptstyle}, and
+% \cmd{\scriptscriptstyle}, or one of the tokens \cmd{\crampeddisplaystyle},
+% \cmd{\crampedtextstyle}, \cmd{\crampedscript\-style}, and
+% \cmd{\crampedscriptscriptstyle} descibed above.
+% \DescribeNonterminal{style token argument}
+% For convenience, we define \meta{style token argument} as follows:
+% \begin{equation*}
+%   \meta{style token argument} \Coloneqq
+%   \term{left brace} \meta{style token} \term{right brace}
+%   \mid \meta{style token}.
+% \end{equation*}
+%
+% \DescribeNonterminal{OpenType name}
+% An \meta{OpenType name} is defined as a \term{balanced text} whose total
+% expansion shall consist of one or more character tokens of category~11 or~12;
+% if the total expansion is empty or contains other kinds of tokens (\eg,
+% control sequence tokens or character tokens of categories other than~11
+% or~12), the behavior is undefined.  The resulting list of character tokens
+% interpreted as a string shall be equal to one of the OpenType names listed in
+% autoref{sec:list}; otherwise an error message is issued by commands that try
+% to interpret the token list as an OpenType parameter name.
+% \DescribeNonterminal{OpenType name argument}
+% For convenience, we define \meta{OpenType name argument} as follows:
+% \begin{equation*}
+%   \meta{OpenType name argument} \Coloneqq
+%   \term{left brace}\meta{OpenType name}\term{right brace}.
+% \end{equation*}
+%
+% \DescribeNonterminal{\hologo{LuaTeX} primitive}
+% A \meta{\hologo{LuaTeX} primitive} is defined as a control sequence token
+% whose meaning is equal to one of the \hologo{LuaTeX} primitive tokens listed
+% in \autoref{sec:list}.  Only in \hologo{LuaTeX} these tokens are truly
+% primitive control sequences; in the other engines, they are defined as
+% protected macros.
+%
+% A parameter represented by either an \meta{OpenType name} or a
+% \meta{\hologo{LuaTeX} primitive} is called \emph{readable} if the
+% currently-running engine is mentioned in the item \enquote{Read access in} of
+% the parameter in \autoref{sec:list}.  Likewise, a parameter is called
+% \emph{writable} if the currently-running engine is mentioned in the item
+% \enquote{Write access in} of the parameter in \autoref{sec:list}.
+%
+% \DescribeMacro{\FontParameter}
+% \cmd{\FontParameter} is a protected macro that shall be used in the form
+% \begin{equation*}
+%   \cmd{\FontParameter}
+%   \meta{OpenType name argument}
+%   \meta{font argument}.
+% \end{equation*}
+% The first argument shall be a valid \meta{OpenType name argument}.  If the
+% corresponding font parameter is not readable, an error message is issued.  If
+% the parameter represented by the \meta{OpenType name argument} is not defined
+% in the font represented by the \meta{font argument}, the behavior is
+% undefined.  Otherwise, the aforementioned construct expands after an
+% undefined number of expansion steps to a token list conforming to the
+% definition of \term{internal integer} if the type of the parameter is
+% \term{number}, or to a token list conforming to the definition of
+% \term{internal dimen} if the type of the parameter is \term{dimen}.  The
+% numeric value of the resulting quantity is the value of the parameter
+% represented by the \meta{OpenType name argument} in the font represented by
+% the \meta{font argument}.
+%
+% \DescribeMacro{\SetFontParameter}
+% \cmd{\SetFontParameter} is a protected macro that shall be used in the form
+% \begin{multline*}
+%   \cmd{\SetFontParameter} \\
+%   \meta{OpenType name argument}
+%   \meta{font argument}
+%   \meta{expression argument}.
+% \end{multline*}
+% The first argument shall be a valid \meta{OpenType name argument}.  If the
+% corresponding font parameter is not writable, an error message is issued.  If
+% the parameter represented by the \meta{OpenType name argument} cannot be set
+% in the font represented by the \meta{font argument}, the behavior is
+% undefined.  If the type of the parameter represented by the \meta{OpenType
+% name argument} is \term{number}, the total expansion of the third argument
+% shall conform to the definition of \term{integer expr}, otherwise the
+% behavior is undefined; if the type is \term{dimen}, it shall conform to the
+% definition of \term{dimen expr}, otherwise the behavior is undefined.  If the
+% behavior is defined and not errorneous, execution of the aforementioned
+% construct leads to the font parameter represented by the \meta{OpenType name
+% argument} in the font represented by the \meta{font argument} being changed
+% to the numeric value of the expression \meta{expression argument}.  The
+% expansion of the construct is undefined.
+%
+% \DescribeMacro{\FontParameterByStyle}
+% \cmd{\FontParameterByStyle} is a protected macro that shall be used in the
+% form
+% \begin{equation*}
+%   \cmd{\FontParameterByStyle}
+%   \meta{OpenType name argument}
+%   \meta{style argument}.
+% \end{equation*}
+% The first argument shall be a valid \meta{OpenType name argument}.  If the
+% corresponding font parameter is not readable, an error message is issued.  If
+% the parameter represented by the \meta{OpenType name argument} is not defined
+% in the mathematical style represented by the \meta{style argument}, the
+% behavior is undefined.  Otherwise, the aforementioned construct expands after
+% an undefined number of expansion steps to a token list conforming to the
+% definition of \term{internal integer} if the type of the parameter is
+% \term{number}, or to a token list conforming to the definition of
+% \term{internal dimen} if the type of the parameter is \term{dimen}.  The
+% numeric value of the resulting quantity is the value of the parameter
+% represented by the \meta{OpenType name argument} in the mathematical style
+% represented by the \meta{style argument}.
+%
+% \DescribeMacro{\SetFontParameterByStyle}
+% \cmd{\SetFontParameterByStyle} is a protected macro that shall be used in the
+% form
+% \begin{multline*}
+%   \cmd{\SetFontParameterByStyle} \\
+%   \meta{OpenType name argument}
+%   \meta{style argument}
+%   \meta{expression argument}.
+% \end{multline*}
+% The first argument shall be a valid \meta{OpenType name argument}.  If the
+% corresponding font parameter is not writable, an error message is issued.  If
+% the parameter represented by the \meta{OpenType name argument} cannot be set
+% for the mathematical style represented by the \meta{style argument}, the
+% behavior is undefined.  If the type of the parameter represented by the
+% \meta{OpenType name argument} is \term{number}, the total expansion of the
+% third argument shall conform to the definition of \term{integer expr},
+% otherwise the behavior is undefined; if the type is \term{dimen}, it shall
+% conform to the definition of \term{dimen expr}, otherwise the behavior is
+% undefined.  If the behavior is defined and not errorneous, execution of the
+% aforementioned construct leads to the font parameter represented by the
+% \meta{OpenType name argument} for the mathematical style represented by the
+% \meta{style argument} being changed to the numeric value of the expression
+% \meta{expression argument}.  The expansion of the construct is undefined.
+%
+% Constructs of the form
+% \begin{equation*}
+%   \meta{\hologo{LuaTeX} primitive}
+%   \meta{style token}
+% \end{equation*}
+% are defined if and only if the font parameter denoted by the
+% \meta{\hologo{LuaTeX} primitive} is readable, and the parameter is defined
+% for the mathematical style represented by the \meta{style token}.  Then the
+% construct expands after an undefined number of expansion steps to a token
+% list conforming to the definition of \term{internal integer} if the type of
+% the parameter is \term{number}, or to a token list conforming to the
+% definition of \term{internal dimen} if the type of the parameter is
+% \term{dimen}.  The numeric value of the resulting quantity is the value of
+% the parameter represented by the \meta{\hologo{LuaTeX} primitive} in the
+% mathematical style represented by the \meta{style token}.
+%
+% Constructs of the form
+% \begin{equation*}
+%   \meta{\hologo{LuaTeX} primitive}
+%   \meta{style token}
+%   \term{equals}
+%   \meta{value}
+% \end{equation*}
+% are defined if and only if the font parameter denoted by the
+% \meta{\hologo{LuaTeX} primitive} is writable, and the parameter can be set
+% for the mathematical style represented by the \meta{style token}, and the
+% total expansion of the \meta{value} conforms to the definition of the term
+% (\term{number} or \term{dimen}) that defines the type of the parameter
+% represented by the \meta{\hologo{LuaTeX} primitive}.  Then execution of the
+% construct leads to the font parameter represented by the
+% \meta{\hologo{LuaTeX} primitive} for the mathematical style represented by
+% the \meta{style token} being changed to the numeric value of the expression
+% \meta{value}.  The expansion of the construct is undefined.
+%
+% \DescribeMacros{\ActivateOpenTypeFontParameters
+% \ActivateLegacyFontParameters}
+% \cmd{\ActivateOpenTypeFontParameters} and \cmd{\ActivateLegacyFontParameters}
+% are protected macros with undefined expansion behavior which when executed
+% load the definitions for OpenType fonts with a \texttt{MATH} table and other
+% types of fonts, respectively.  They are defined if and only if \hologo{XeTeX}
+% is running.
 %
 %
-% \subsection{Available font parameters}
+% \section{Available font parameters}
 % \label{sec:list}
 %
 % \NewDocumentCommand{\FontparamDesc}{mmmmmmm}{
