@@ -1,5 +1,5 @@
 -- fontparams.lua
--- Copyright 2010 Philipp Stephani
+-- Copyright 2010, 2011 Philipp Stephani
 --
 -- This work may be distributed and/or modified under the
 -- conditions of the LaTeX Project Public License, either version 1.3c
@@ -13,7 +13,7 @@
 -- The Current Maintainer of this work is Philipp Stephani.
 -- This work consists of all files listed in MANIFEST.
 
-local err = luatexbase.provides_module {
+local module_info = {
    name = "fontparams",
    date = "2010/12/21",
    version = "0.1",
@@ -22,8 +22,11 @@ local err = luatexbase.provides_module {
    license = "LPPL v1.3+"
 }
 
-luatexbase.require_module("fontparams-primitives", "2010/12/21")
+local err = luatexbase.provides_module(module_info)
 
+luatexbase.require_module("fontparams-primitives", module_info.date)
+
+local tostring = tostring
 local font = font
 local tex = tex
 local primitives = fontparams.primitives.list
