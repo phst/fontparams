@@ -48,7 +48,7 @@ end
 
 local function get_constants(font_name)
    local id = font.id(font_name)
-   if id then
+   if id and id ~= -1 then
       local fnt = font.getfont(id)
       if fnt then
          local const = fnt.MathConstants
