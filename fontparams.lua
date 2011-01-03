@@ -29,6 +29,7 @@ luatexbase.require_module("fontparams-primitives", module_info.date)
 local tostring = tostring
 local font = font
 local tex = tex
+local cct_string = luatexbase.catcodetables.string
 local primitives = fontparams.primitives.list
 
 module("fontparams")
@@ -69,7 +70,7 @@ function print_value(font_name, param_name)
    local val = const[param_name]
    if val then
       local res = tostring(val)
-      tex.sprint(luatexbase.catcodetables.string, res)
+      tex.sprint(cct_string, res)
    else
       err("Font \\%s does not contain font parameter %s", font_name, param_name)
    end
