@@ -3,8 +3,7 @@ This work consists of the non-derived files
 README
 README.rst
 MANIFEST
-Makefile
-SConsctruct
+SConstruct
 SConscript
 fontparams.dtx
 fontparams.ins
@@ -21,6 +20,7 @@ test-lua-table.tex
 fontparams-test.tex
 build-test.sh
 compare-data.py
+main.cpp
 fontparams.el
 utilities.py
 
