@@ -1,0 +1,109 @@
+# SConscript
+# Copyright 2011 Philipp Stephani
+#
+# This work may be distributed and/or modified under the
+# conditions of the LaTeX Project Public License, either version 1.3c
+# of this license or (at your option) any later version.
+# The latest version of this license is in
+#   http://www.latex-project.org/lppl.txt
+# and version 1.3c or later is part of all distributions of LaTeX
+# version 2009/09/24 or later.
+#
+# This work has the LPPL maintenance status `maintained'.
+# The Current Maintainer of this work is Philipp Stephani.
+# This work consists of all files listed in MANIFEST.
+
+import re
+import os
+import subprocess
+
+import utilities
+
+lua_require_rgx = re.compile(r"""^require\s*\(?\s*["']([^"']+)["']""", re.M)
+
+def scan_lua(node, env, path):
+    contents = node.get_text_contents()
+    requires = lua_require_rgx.findall(contents)
+    return [stem + ".lua" for stem in requires]
+
+def split_paths(target, source):
+    assert len(target) == 1
+    assert len(source) == 1
+    src_files = map(str, source)
+    src_file = src_files[0]
+    src_dir, src_leaf = os.path.split(src_file)
+    tgt_files = map(str, target)
+    tgt_file = tgt_files[0]
+    tgt_dir, tgt_leaf = os.path.split(tgt_file)
+    assert src_dir == tgt_dir
+    return src_dir, src_leaf, tgt_leaf
+
+def build_package(target, source, env):
+    dir, src_leaf, tgt_leaf = split_paths(target, source)
+    stem = os.path.splitext(src_leaf)[0]
+    assert stem == os.path.splitext(tgt_leaf)[0]
+    tex = ["tex"]
+    subprocess.check_call(tex + [src_leaf], cwd=dir)
+
+def build_manual(target, source, env):
+    dir, src_leaf, tgt_leaf = split_paths(target, source)
+    stem = os.path.splitext(src_leaf)[0]
+    assert stem == os.path.splitext(tgt_leaf)[0]
+    pdflatex = ["pdflatex"]
+    makeindex = ["makeindex"]
+    flags = ["--file-line-error", "--interaction=scrollmode"]
+    flags_draft = flags + ["--draftmode"]
+    flags_final = flags + ["--synctex=1"]
+    index_src = stem + ".idx"
+    index_tgt = stem + ".ind"
+    index_log = stem + ".ilg"
+    index_sty = "gind.ist"
+    changes_src = stem + ".glo"
+    changes_tgt = stem + ".gls"
+    changes_log = stem + ".glg"
+    changes_sty = "gglo.ist"
+    subprocess.check_call(pdflatex + flags_draft + [src_leaf], cwd=dir)
+    subprocess.check_call(makeindex + ["-s", index_sty, "-o", index_tgt, "-t", index_log, index_src], cwd=dir)
+    subprocess.check_call(makeindex + ["-s", changes_sty, "-o", changes_tgt, "-t", changes_log, changes_src], cwd=dir)
+    subprocess.check_call(pdflatex + flags_draft + [src_leaf], cwd=dir)
+    subprocess.check_call(pdflatex + flags_final + [src_leaf], cwd=dir)
+
+def build_definition(target, source, env):
+    dir, src_leaf, tgt_leaf = split_paths(target, source)
+    lua = ["lua"]
+    subprocess.check_call(lua + [src_leaf], cwd=dir)
+
+name = "fontparams"
+bundle = "phst"
+branch = "latex/" + bundle
+texmf = "#stage/texmf"
+pdf = name + ".pdf"
+ins = name + ".ins"
+dtx = name + ".dtx"
+sty = name + ".sty"
+lua = name + ".lua"
+cls = utilities.kpsewhich("phst-doc.cls")
+compiled = [(".def", "common"), ("-legacy.def", "legacy"), ("-luatex.def", "luatex"), ("-primitives.lua", "luatex"), ("-xetex.def", "xetex"), ("-pdftex.def", "pdftex"), ("-desc.tex", "desc")]
+defs = [name + dest for dest, src in compiled]
+compilers = list(frozenset("compile-" + src + ".lua" for dest, src in compiled))
+
+lua_scan = Scanner(function=scan_lua, skeys=[".lua"])
+pkg_bld = Builder(action=build_package, suffix=".sty", src_suffix=".ins")
+man_bld = Builder(action=build_manual, suffix=".pdf", src_suffix=".dtx")
+def_bld = Builder(action=build_definition)
+env = Environment()
+env.Append(SCANNERS=lua_scan, BUILDERS={"Package": pkg_bld, "Manual": man_bld, "Definition": def_bld})
+
+package = env.Package(sty, ins)
+env.Depends(package, defs)
+
+manual = env.Manual(pdf, dtx)
+env.Depends(manual, [name + "-desc.tex", sty, cls] + defs)
+
+definitions = []
+for dest, src in compiled:
+    definitions.append(env.Definition(name + dest, "compile-" + src + ".lua"))
+
+env.Install(texmf + "/tex/" + branch, [package, lua] + definitions)
+env.Install(texmf + "/doc/" + branch, manual)
+env.Install(texmf + "/source/" + branch, [ins, dtx, "fontparams-compile.lua", "fontparams-data.lua", cls] + compilers)

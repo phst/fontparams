@@ -1,0 +1,121 @@
+# SConscript
+# Copyright 2011 Philipp Stephani
+#
+# This work may be distributed and/or modified under the
+# conditions of the LaTeX Project Public License, either version 1.3c
+# of this license or (at your option) any later version.
+# The latest version of this license is in
+#   http://www.latex-project.org/lppl.txt
+# and version 1.3c or later is part of all distributions of LaTeX
+# version 2009/09/24 or later.
+#
+# This work has the LPPL maintenance status `maintained'.
+# The Current Maintainer of this work is Philipp Stephani.
+# This work consists of all files listed in MANIFEST.
+
+import logging
+import os
+import tempfile
+import subprocess
+import shutil
+
+import utilities
+
+logging.basicConfig(level=logging.INFO)
+
+SConscript("ftparams/SConscript")
+
+curdir = Dir(".")
+ftparams = File("ftparams/ftparams")
+
+def read_freetype_params(path, index):
+    stdout = utilities.check_output(ftparams.path, path, str(index))
+    result = {}
+    for line in stdout.splitlines():
+        key, value = line.split("\t")
+        result[key] = float(value)
+    return result
+
+def read_latex_params(program, path, index):
+    cmd = r"\newcommand*{{\TestFontPath}}{{{0}}}\newcommand*{{\TestFontIndex}}{{{1}}}\input{{read-params.tex}}".format(path, index)
+    dir = tempfile.mkdtemp()
+    subprocess.check_call([program, "--output-directory=" + dir, "--jobname=texput", "--interaction=nonstopmode", cmd], cwd=curdir.path)
+    result = {}
+    with open(os.path.join(dir, "texput.dat"), "rt") as stream:
+        for line in stream:
+            if line.startswith("#"):
+                continue
+            fields = line.split(",")
+            name = fields[0]
+            result[name] = tuple(float(s) if s else None for s in fields[1:])
+    shutil.rmtree(dir)
+    return result
+
+def merge_params(*args):
+    keys = set()
+    lengths = [1] * len(args)
+    for i, arg in enumerate(args):
+        keys.update(arg)
+        value = next(arg.itervalues())
+        if isinstance(value, tuple):
+            lengths[i] = len(value)
+    result = {}
+    for key in keys:
+        value = []
+        for arg, length in zip(args, lengths):
+            fields = arg.get(key)
+            if fields is not None:
+                if not isinstance(fields, tuple):
+                    fields = fields,
+            else:
+                fields = (None,) * length
+            value.extend(fields)
+        result[key] = tuple(value)
+    return result
+
+font_indices = {"cambria.ttc": 1}
+
+def format_param(value):
+    if value is not None:
+        return "{0:.4g}".format(value)
+    else:
+        return ""
+
+def build_opentype_params(target, source, env):
+    assert len(target) == 1
+    assert len(source) == 1
+    tgt_file = str(target[0])
+    src_file = str(source[0])
+    src_base = os.path.basename(src_file)
+    index = font_indices.get(src_base, 0)
+    freetype_params = read_freetype_params(src_file, index)
+    lualatex_params = read_latex_params("lualatex", src_file, index)
+    xelatex_params = read_latex_params("xelatex", src_file, index)
+    params = merge_params(freetype_params, lualatex_params, xelatex_params)
+    with open(tgt_file, "wt") as stream:
+        for key in sorted(params):
+            stream.write(",".join([key] + map(format_param, params[key])) + "\n")
+
+opentype_param_builder = Builder(action=build_opentype_params)
+
+env = Environment()
+env.Append(BUILDERS={"OpenTypeParams": opentype_param_builder})
+
+package_suffixes = [".sty", ".lua", "-primitives.lua", ".def", "-luatex.def", "-legacy.def", "-xetex.def"]
+package_files = ["fontparams" + suffix for suffix in package_suffixes]
+
+for file in package_files:
+    Command(file, "../package/" + file, Copy("$TARGET", "$SOURCE"))
+
+fonts = {"XITS": "xits-math.otf",
+         "Euler": "euler.otf",
+         "Asana": "Asana-Math.otf",
+         "Cambria": "cambria.ttc"}
+
+for name, file in fonts.iteritems():
+    try:
+        path = utilities.kpsewhich(file)
+        result = env.OpenTypeParams(name + ".dat", path)
+        env.Depends(result, ["ftparams/ftparams", "read-params.tex"] + package_files)
+    except subprocess.CalledProcessError:
+        logging.warning("Font %s not found", name)
