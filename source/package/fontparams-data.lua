@@ -474,6 +474,7 @@ params = {
    },
    RadicalDegreeBottomRaisePercent = {
       description = "Percentage of the radical symbols ascender that the bottom of the degree is raised",
+      type = "int",
       luatex = "Umathradicaldegreeraise",
       xetex = 65
    },

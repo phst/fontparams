@@ -136,13 +136,19 @@ end
 date = os.date("%Y/%m/%d")
 
 local tpl_provides_file = [[
-\ProvidesExplFile { %s } { %s } { %s } { %s }
+\ExplSyntaxOff
+\ProvidesExplFile{%s}{%s}{%s}{%s}
 ]]
 
 function output_tex(filename, description)
    io.output(filename)
    io.write(format_header(filename, "tex"))
    io.write(tpl_provides_file:format(filename, date, version, description))
+end
+
+function close_tex()
+   io.write("\\endinput\n")
+   io.close()
 end
 
 function navigate(root, ...)
