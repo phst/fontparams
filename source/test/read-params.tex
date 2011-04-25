@@ -1,0 +1,187 @@
+% fontparams-test.tex
+% Copyright 2010 Philipp Stephani
+%
+% This work may be distributed and/or modified under the
+% conditions of the LaTeX Project Public License, either version 1.3c
+% of this license or (at your option) any later version.
+% The latest version of this license is in
+%   http://www.latex-project.org/lppl.txt
+% and version 1.3c or later is part of all distributions of LaTeX
+% version 2009/09/24 or later.
+%
+% This work has the LPPL maintenance status `maintained'.
+% The Current Maintainer of this work is Philipp Stephani.
+% This work consists of all files listed in MANIFEST.
+
+\documentclass{article}
+
+\usepackage{expl3}
+\usepackage{xstring}
+\usepackage{fontparams}
+
+\ExplSyntaxOn
+\luatex_if_engine:T {
+  \usepackage { luaotfload }
+}
+\cs_new_eq:NN \clist_gset:Nn \tl_gset:Nn
+\cs_new_protected:Nn \clist_const:Nn {
+  \clist_new:N #1
+  \clist_gset:Nn #1 { #2 }
+}
+\tl_const:Nn \c_styles_tl {
+  \displaystyle
+  \crampeddisplaystyle
+  \textstyle
+  \crampedtextstyle
+  \scriptstyle
+  \crampedscriptstyle
+  \scriptscriptstyle
+  \crampedscriptscriptstyle
+}
+\clist_const:Nn \c_params_clist {
+  ScriptPercentScaleDown                   : number,
+  ScriptScriptPercentScaleDown             : number,
+  DelimitedSubFormulaMinHeight             : length,
+  DisplayOperatorMinHeight                 : length,
+  MathLeading                              : length,
+  AxisHeight                               : length,
+  AccentBaseHeight                         : length,
+  FlattenedAccentBaseHeight                : length,
+  SubscriptShiftDown                       : length,
+  SubscriptTopMax                          : length,
+  SubscriptBaselineDropMin                 : length,
+  SuperscriptShiftUp                       : length,
+  SuperscriptShiftUpCramped                : length,
+  SuperscriptBottomMin                     : length,
+  SuperscriptBaselineDropMax               : length,
+  SubSuperscriptGapMin                     : length,
+  SuperscriptBottomMaxWithSubscript        : length,
+  SpaceAfterScript                         : length,
+  UpperLimitGapMin                         : length,
+  UpperLimitBaselineRiseMin                : length,
+  LowerLimitGapMin                         : length,
+  LowerLimitBaselineDropMin                : length,
+  StackTopShiftUp                          : length,
+  StackTopDisplayStyleShiftUp              : length,
+  StackBottomShiftDown                     : length,
+  StackBottomDisplayStyleShiftDown         : length,
+  StackGapMin                              : length,
+  StackDisplayStyleGapMin                  : length,
+  StretchStackTopShiftUp                   : length,
+  StretchStackBottomShiftDown              : length,
+  StretchStackGapAboveMin                  : length,
+  StretchStackGapBelowMin                  : length,
+  FractionNumeratorShiftUp                 : length,
+  FractionNumeratorDisplayStyleShiftUp     : length,
+  FractionDenominatorShiftDown             : length,
+  FractionDenominatorDisplayStyleShiftDown : length,
+  FractionNumeratorGapMin                  : length,
+  FractionNumDisplayStyleGapMin            : length,
+  FractionRuleThickness                    : length,
+  FractionDenominatorGapMin                : length,
+  FractionDenomDisplayStyleGapMin          : length,
+  SkewedFractionHorizontalGap              : length,
+  SkewedFractionVerticalGap                : length,
+  OverbarVerticalGap                       : length,
+  OverbarRuleThickness                     : length,
+  OverbarExtraAscender                     : length,
+  UnderbarVerticalGap                      : length,
+  UnderbarRuleThickness                    : length,
+  UnderbarExtraDescender                   : length,
+  RadicalVerticalGap                       : length,
+  RadicalDisplayStyleVerticalGap           : length,
+  RadicalRuleThickness                     : length,
+  RadicalExtraAscender                     : length,
+  RadicalKernBeforeDegree                  : length,
+  RadicalKernAfterDegree                   : length,
+  RadicalDegreeBottomRaisePercent          : number
+}
+\chk_if_free_cs:N \l_params_font
+\luatex_if_engine:TF {
+  \cs_new_protected_nopar:Nn \load_opentype_font:nn {
+    \font_set:Nnn \l_params_font { { file: #1 (#2) } } { 10pt }
+  }
+} {
+  \xetex_if_engine:T {
+    \cs_new_protected_nopar:Nn \load_opentype_font:nn {
+      \font_set:Nnn \l_params_font { "[ #1 ]" } { 10pt }
+    }
+    \ActivateOpenTypeFontParameters
+  }
+}
+\fp_new:N \l_one_em_fp
+\cs_new_protected_nopar:Nn \select_opentype_font:nn {
+  \load_opentype_font:nn { #1 } { #2 }
+  \l_params_font
+  \fp_set_from_dim:Nn \l_one_em_fp { 1em }
+  \textfont \c_two = \l_params_font
+  \scriptfont \c_two = \l_params_font
+  \scriptscriptfont \c_two = \l_params_font
+}
+\clist_new:N \l_params_line_clist
+\tl_new:N \l_params_value_tl
+\fp_new:N \l_params_value_fp
+\iow_new:N \l_params_iow
+\cs_new_protected_nopar:Nn \write_param:nN {
+  \clist_clear:N \l_params_line_clist
+  \clist_put_right:Nn \l_params_line_clist { #1 }
+  \cs_if_exist:cTF { fontparams_font_get_ #1 :N } {
+    \tl_set:Nx \l_params_value_tl { \the \FontParameter { #1 } { \l_params_font } }
+    #2
+  } {
+    \clist_put_right:Nn \l_params_line_clist { }
+  }
+  \cs_if_exist:cT { fontparams_style_get_ #1 :N } {
+    \tl_map_inline:Nn \c_styles_tl {
+      \tl_set:Nx \l_params_value_tl { \the \FontParameterByStyle { #1 } { ##1 } }
+      #2
+    }
+    \iow_now:Nx \l_params_iow {
+      \clist_use:N \l_params_line_clist
+    }
+  }
+}
+\msg_new:nnn { test } { invalid-number } { Invalid~ number~ #1 }
+\msg_new:nnn { test } { invalid-decimal } { Invalid~ decimal~ #1 }
+\msg_new:nnn { test } { invalid-length } { Invalid~ length~ #1 }
+\cs_new_protected_nopar:Nn \format_number: {
+  \IfInteger { \tl_use:N \l_params_value_tl } {
+    \clist_put_right:NV \l_params_line_clist \l_params_value_tl
+  } {
+    \clist_put_right:Nn \l_params_line_clist { }
+    \msg_error:nnx { test } { invalid-number } { \tl_use:N \l_params_value_tl }
+  }
+}
+\cs_new_protected_nopar:Nn \format_length: {
+  \IfEndWith { \tl_use:N \l_params_value_tl } { \tl_to_str:n { pt } } {
+    \StrGobbleRight { \tl_use:N \l_params_value_tl } { 2 } [ \l_params_value_tl ]
+    \IfDecimal { \tl_use:N \l_params_value_tl } {
+      \fp_set:Nn \l_params_value_fp { \tl_use:N \l_params_value_tl }
+      \fp_div:Nn \l_params_value_fp { \fp_use:N \l_one_em_fp }
+      \clist_put_right:Nx \l_params_line_clist { \fp_use:N \l_params_value_fp }
+    } {
+      \clist_put_right:Nn \l_params_line_clist { }
+      \msg_error:nnx { test } { invalid-decimal } { \tl_use:N \l_params_value_tl }
+    }
+  } {
+    \clist_put_right:Nn \l_params_line_clist { }
+    \msg_error:nnx { test } { invalid-length } { \tl_use:N \l_params_value_tl }
+  }
+}
+\cs_new_protected_nopar:Npn \write_param_aux:w #1 : #2 \q_stop {
+  \exp_args:Nnc \write_param:nN { #1 } { format_ #2 : }
+}
+\cs_new_protected_nopar:Nn \write_params: {
+  \iow_open:Nn \l_params_iow { \tl_use:N \c_job_name_tl .dat }
+  \iow_now:Nx \l_params_iow { \cs_to_str:N \# ~ Name, Font, D, D', T, T', S, S', SS, SS' }
+  \clist_map_inline:Nn \c_params_clist {
+    \write_param_aux:w ##1 \q_stop
+  }
+  \iow_close:N \l_params_iow
+}
+\select_opentype_font:nn { \TestFontPath } { \TestFontIndex }
+\write_params:
+\ExplSyntaxOff
+
+\begin{document}
+\end{document}
