@@ -126,4 +126,4 @@ for index, value in ipairs(result) do
    io.write(tpl_row:format(unpack(value)))
 end
 
-io.close()
+common.close_tex()

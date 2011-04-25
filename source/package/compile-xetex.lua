@@ -185,4 +185,4 @@ for key, dummy in pairs(params) do
    end
 end
 
-io.close()
+common.close_tex()

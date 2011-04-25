@@ -38,4 +38,4 @@ for key, value in pairs(params) do
    end
 end
 
-io.close()
+common.close_tex()
