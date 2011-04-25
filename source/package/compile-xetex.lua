@@ -25,7 +25,7 @@ local tpl_font_get_dimen = [[
   \fontdimen %s #1]]
 
 local tpl_font_get_int = [[
-  \numexpr \fontdimen %s #1 \relax]]
+  \numexpr \number \fontdimen %s #1 \relax]]
 
 local function format_font_get(vtype, def)
    local value = def.nondisplay.noncramped
@@ -109,6 +109,7 @@ local tpl_style_get_dimen = "%s"
 
 local tpl_style_get_int = [[
   \numexpr
+  \number
 %s
   \relax]]
 
