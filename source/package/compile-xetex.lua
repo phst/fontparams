@@ -1,6 +1,6 @@
 #!/usr/bin/env lua
 
--- fontparams-compile-xetex.lua
+-- compile-xetex.lua
 -- Copyright 2010, 2011 Philipp Stephani
 --
 -- This work may be distributed and/or modified under the

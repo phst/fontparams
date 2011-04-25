@@ -2,4 +2,7 @@ auto/
 build/
 stage/
 .DS_Store
+.sconsign.dblite
+Parameters.ods
 *~
+*.pyc

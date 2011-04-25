@@ -1,7 +1,7 @@
 #!/usr/bin/env lua
 
--- fontparams-compile-desc.lua
--- Copyright 2010 Philipp Stephani
+-- compile-desc.lua
+-- Copyright 2010, 2011 Philipp Stephani
 --
 -- This work may be distributed and/or modified under the
 -- conditions of the LaTeX Project Public License, either version 1.3c

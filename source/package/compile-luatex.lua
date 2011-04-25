@@ -1,6 +1,6 @@
 #!/usr/bin/env lua
 
--- fontparams-compile-luatex.lua
+-- compile-luatex.lua
 -- Copyright 2010, 2011 Philipp Stephani
 --
 -- This work may be distributed and/or modified under the
@@ -33,14 +33,14 @@ end
 local tpl_font_get_dimen = [[
   \dimexpr
   \lua_now:x {
-    fontparams.print_value(" \exp_after:wN \cs_to_str:N \the #1 ", %q)
+    fontparams.print_value("\exp_after:wN \cs_to_str:N \the #1", %q)
   } sp
   \relax]]
 
 local tpl_font_get_int = [[
   \numexpr
   \lua_now:x {
-    fontparams.print_value(" \exp_after:wN \cs_to_str:N \the #1 ", %q)
+    fontparams.print_value("\exp_after:wN \cs_to_str:N \the #1", %q)
   }
   \relax]]
 
@@ -55,12 +55,12 @@ end
 
 local tpl_font_set_dimen = [[
   \lua_now:x {
-    fontparams.set_value(" \exp_after:wN \cs_to_str:N \the #1 ", %q, \number \dimexpr #2 \relax)
+    fontparams.set_value("\exp_after:wN \cs_to_str:N \the #1", %q, \number \dimexpr #2 \relax)
   }]]
 
 local tpl_font_set_int = [[
   \lua_now:x {
-    fontparams.set_value(" \exp_after:wN \cs_to_str:N \the #1 ", %q, \number \numexpr #2 \relax)
+    fontparams.set_value("\exp_after:wN \cs_to_str:N \the #1", %q, \number \numexpr #2 \relax)
   }]]
 
 local function format_font_set(name, vtype)

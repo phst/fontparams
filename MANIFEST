@@ -4,22 +4,25 @@ README
 README.rst
 MANIFEST
 Makefile
+SConsctruct
+SConscript
 fontparams.dtx
 fontparams.ins
 fontparams.lua
-fontparams-compile.lua
-fontparams-compile-common.lua
-fontparams-compile-legacy.lua
-fontparams-compile-luatex.lua
-fontparams-compile-xetex.lua
-fontparams-compile-pdftex.lua
-fontparams-compile-desc.lua
 fontparams-data.lua
+fontparams-compile.lua
+compile-common.lua
+compile-legacy.lua
+compile-luatex.lua
+compile-xetex.lua
+compile-pdftex.lua
+compile-desc.lua
 test-lua-table.tex
 fontparams-test.tex
 build-test.sh
 compare-data.py
 fontparams.el
+utilities.py
 
 and the derived files
 
