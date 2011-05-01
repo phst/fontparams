@@ -613,7 +613,7 @@
 %<*package>
 \NeedsTeXFormat{LaTeX2e}[2009/09/24]
 \RequirePackage{expl3}[2010/10/02]
-\ProvidesExplPackage{fontparams}{2011/04/25}{0.1}%
+\ProvidesExplPackage{fontparams}{2011/05/02}{0.1}%
   {Unified font parameter access}
 %    \end{macrocode}
 %
@@ -672,9 +672,27 @@
 %
 % \subsection{Common definitions}
 %
+% \begin{macro}{\fontparams_input:n}
+%   The macro \cmd{\fontparams_input:n}\marg{file name} saves the current
+%   category code regime on the stack, switches to default \LaTeXe\ category
+%   codes, and inputs the file specified by the \meta{file name}.
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \fontparams_input:n #1 {
+  \tl_set:Nx \ExplSyntaxStack { \ExplSyntaxStatus \ExplSyntaxStack }
+  \ExplSyntaxOff
+  \file_input:n { #1 }
+  \tl_if_empty:NTF \ExplSyntaxStack {
+    \ExplSyntaxOff
+  } {
+    \exp_last_unbraced:No \ExplSyntaxPopStack \ExplSyntaxStack \q_stop
+  }
+}
+%    \end{macrocode}
+% \end{macro}
+%
 % Now we load the auto-generated file of common definitions.
 %    \begin{macrocode}
-\file_input:n { fontparams.def }
+\fontparams_input:n { fontparams.def }
 %    \end{macrocode}
 %
 % \subsection{\Hologo{LuaTeX} definitions}
@@ -709,7 +727,7 @@
 % primitives.  The primitives will always be enabled because the definition
 % file undefines all of them.
 %    \begin{macrocode}
-  \file_input:n { fontparams-luatex.def }
+  \fontparams_input:n { fontparams-luatex.def }
   \lua_now:x { fontparams.activate_primitives() }
 %    \end{macrocode}
 %
@@ -719,7 +737,7 @@
 % and \hologo{pdfTeX}.
 %    \begin{macrocode}
 } {
-  \file_input:n { fontparams-legacy.def }
+  \fontparams_input:n { fontparams-legacy.def }
 %    \end{macrocode}
 %
 % \begin{macro}{\crampeddisplaystyle}
@@ -757,7 +775,7 @@
 % \hologo{XeTeX} so that legacy fonts use the correct definitions in
 % \hologo{XeTeX}.
 %    \begin{macrocode}
-  \file_input:n { fontparams-pdftex.def }
+  \fontparams_input:n { fontparams-pdftex.def }
 %    \end{macrocode}
 %
 % \begin{macro}{\fontparams_load_xetex_def:}
@@ -767,10 +785,10 @@
 %    \begin{macrocode}
   \xetex_if_engine:T {
     \cs_new_protected_nopar:Npn \fontparams_load_xetex_def: {
-      \file_input:n { fontparams-xetex.def }
+      \fontparams_input:n { fontparams-xetex.def }
     }
     \cs_new_protected_nopar:Npn \fontparams_load_pdftex_def: {
-      \file_input:n { fontparams-pdftex.def }
+      \fontparams_input:n { fontparams-pdftex.def }
     }
   }
 }

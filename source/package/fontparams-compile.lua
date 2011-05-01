@@ -136,7 +136,6 @@ end
 date = os.date("%Y/%m/%d")
 
 local tpl_provides_file = [[
-\ExplSyntaxOff
 \ProvidesExplFile{%s}{%s}{%s}{%s}
 ]]
 
