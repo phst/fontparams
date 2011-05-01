@@ -95,7 +95,7 @@ env = Environment()
 env.Append(SCANNERS=lua_scan, BUILDERS={"Package": pkg_bld, "Manual": man_bld, "Definition": def_bld})
 
 package = env.Package(sty, ins)
-env.Depends(package, defs)
+env.Depends(package, [dtx] + defs)
 
 manual = env.Manual(pdf, dtx)
 env.Depends(manual, [name + "-desc.tex", sty, cls] + defs)
