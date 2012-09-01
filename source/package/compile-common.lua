@@ -1,7 +1,7 @@
 #!/usr/bin/env lua
 
 -- compile-common.lua
--- Copyright 2010, 2011 Philipp Stephani
+-- Copyright 2010, 2011, 2012 Philipp Stephani
 --
 -- This work may be distributed and/or modified under the
 -- conditions of the LaTeX Project Public License, either version 1.3c
@@ -22,10 +22,10 @@ local params = fontparams.data.params
 local common = fontparams.compile
 
 local tpl_macros = [[
-\chk_if_free_cs:N \fontparams_font_get_%s:N
-\chk_if_free_cs:N \fontparams_font_set_%s:Nn
-\chk_if_free_cs:N \fontparams_style_get_%s:N
-\chk_if_free_cs:N \fontparams_style_set_%s:Nn
+\chk_if_free_cs:N \__fontparams_font_get_%s:N
+\chk_if_free_cs:N \__fontparams_font_set_%s:Nn
+\chk_if_free_cs:N \__fontparams_style_get_%s:N
+\chk_if_free_cs:N \__fontparams_style_set_%s:Nn
 ]]
 
 local function format_macros(name)

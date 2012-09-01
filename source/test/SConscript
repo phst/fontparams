@@ -1,5 +1,5 @@
 # SConscript
-# Copyright 2011 Philipp Stephani
+# Copyright 2011, 2012 Philipp Stephani
 #
 # This work may be distributed and/or modified under the
 # conditions of the LaTeX Project Public License, either version 1.3c
@@ -39,7 +39,7 @@ def read_freetype_params(path, index):
 def read_latex_params(program, path, index):
     cmd = r"\newcommand*{{\TestFontPath}}{{{0}}}\newcommand*{{\TestFontIndex}}{{{1}}}\input{{read-params.tex}}".format(path, index)
     dir = tempfile.mkdtemp()
-    subprocess.check_call([program, "--output-directory=" + dir, "--jobname=texput", "--interaction=nonstopmode", cmd], cwd=curdir.path)
+    subprocess.check_call([program, "--output-directory=" + dir, "--jobname=texput", "--interaction=nonstopmode", "--file-line-error", cmd], cwd=curdir.path)
     result = {}
     with open(os.path.join(dir, "texput.dat"), "rt") as stream:
         for line in stream:
@@ -101,7 +101,7 @@ opentype_param_builder = Builder(action=build_opentype_params)
 env = Environment()
 env.Append(BUILDERS={"OpenTypeParams": opentype_param_builder})
 
-package_suffixes = [".sty", ".lua", "-primitives.lua", ".def", "-luatex.def", "-legacy.def", "-xetex.def"]
+package_suffixes = [".sty", ".lua", "-primitives.lua", ".def", "-luatex.def", "-legacy.def", "-pdftex.def", "-xetex.def"]
 package_files = ["fontparams" + suffix for suffix in package_suffixes]
 
 for file in package_files:

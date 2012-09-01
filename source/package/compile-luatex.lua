@@ -1,7 +1,7 @@
 #!/usr/bin/env lua
 
 -- compile-luatex.lua
--- Copyright 2010, 2011 Philipp Stephani
+-- Copyright 2010, 2011, 2012 Philipp Stephani
 --
 -- This work may be distributed and/or modified under the
 -- conditions of the LaTeX Project Public License, either version 1.3c
@@ -32,14 +32,14 @@ end
 
 local tpl_font_get_dimen = [[
   \dimexpr
-  \lua_now:x {
+  \lua_now_x:n {
     fontparams.print_value("\exp_after:wN \cs_to_str:N \the #1", %q)
   } sp
   \relax]]
 
 local tpl_font_get_int = [[
   \numexpr
-  \lua_now:x {
+  \lua_now_x:n {
     fontparams.print_value("\exp_after:wN \cs_to_str:N \the #1", %q)
   }
   \relax]]
@@ -54,12 +54,12 @@ local function format_font_get(name, vtype)
 end
 
 local tpl_font_set_dimen = [[
-  \lua_now:x {
+  \lua_now_x:n {
     fontparams.set_value("\exp_after:wN \cs_to_str:N \the #1", %q, \number \dimexpr #2 \relax)
   }]]
 
 local tpl_font_set_int = [[
-  \lua_now:x {
+  \lua_now_x:n {
     fontparams.set_value("\exp_after:wN \cs_to_str:N \the #1", %q, \number \numexpr #2 \relax)
   }]]
 
@@ -73,10 +73,10 @@ local function format_font_set(name, vtype)
 end
 
 local tpl_font_macros = [[
-\cs_new_protected_nopar:Npn \fontparams_font_get_%s:N #1 {
+\cs_new_protected_nopar:Npn \__fontparams_font_get_%s:N #1 {
 %s
 }
-\cs_new_protected_nopar:Npn \fontparams_font_set_%s:Nn #1 #2 {
+\cs_new_protected_nopar:Npn \__fontparams_font_set_%s:Nn #1 #2 {
 %s
 }
 ]]
@@ -158,10 +158,10 @@ local function format_style_set(primitive, value)
 end
 
 local tpl_style_macros = [[
-\cs_new_protected_nopar:Npn \fontparams_style_get_%s:N #1 {
+\cs_new_protected_nopar:Npn \__fontparams_style_get_%s:N #1 {
 %s
 }
-\cs_new_protected_nopar:Npn \fontparams_style_set_%s:Nn #1 #2 {
+\cs_new_protected_nopar:Npn \__fontparams_style_set_%s:Nn #1 #2 {
 %s
 }
 ]]
@@ -173,7 +173,7 @@ local function format_style_macros(name, primitive, value)
 end
 
 tpl_undefine = [[
-\fontparams_undefine:N \%s
+\__fontparams_undefine:N \%s
 ]]
 
 local function format_undefine(name)
@@ -210,7 +210,7 @@ tpl_primitive_list = [[
 luatexbase.provides_module {
    name = "fontparams-primitives",
    date = "%s",
-   version = "0.1",
+   version = "0.2",
    description = "Engine-independent access to font parameters",
    author = "Philipp Stephani",
    license = "LPPL v1.3+"

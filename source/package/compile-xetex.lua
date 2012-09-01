@@ -1,7 +1,7 @@
 #!/usr/bin/env lua
 
 -- compile-xetex.lua
--- Copyright 2010, 2011 Philipp Stephani
+-- Copyright 2010, 2011, 2012 Philipp Stephani
 --
 -- This work may be distributed and/or modified under the
 -- conditions of the LaTeX Project Public License, either version 1.3c
@@ -54,10 +54,10 @@ local function format_font_set(vtype, def)
 end
 
 local tpl_font_macros = [[
-\cs_set_protected_nopar:Npn \fontparams_font_get_%s:N #1 {
+\cs_set_protected_nopar:Npn \__fontparams_font_get_%s:N #1 {
 %s
 }
-\cs_set_protected_nopar:Npn \fontparams_font_set_%s:Nn #1 #2 {
+\cs_set_protected_nopar:Npn \__fontparams_font_set_%s:Nn #1 #2 {
 %s
 }
 ]]
@@ -138,10 +138,10 @@ local function format_style_set(vtype, expr)
 end
 
 local tpl_style_macros = [[
-\cs_set_protected_nopar:Npn \fontparams_style_get_%s:N #1 {
+\cs_set_protected_nopar:Npn \__fontparams_style_get_%s:N #1 {
 %s
 }
-\cs_set_protected_nopar:Npn \fontparams_style_set_%s:Nn #1 #2 {
+\cs_set_protected_nopar:Npn \__fontparams_style_set_%s:Nn #1 #2 {
 %s
 }
 ]]

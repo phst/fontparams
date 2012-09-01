@@ -38,7 +38,7 @@
 \newwrite\FontparamsStream
 
 \newcommand*{\FontparamsRow}[1]{%
-  \ifcsname fontparams_style_get_#1:N\endcsname
+  \ifcsname __fontparams_style_get_#1:N\endcsname
   #1
   & \the\FontParameterByStyle{#1}{\displaystyle}
   & \the\FontParameterByStyle{#1}{\crampeddisplaystyle}

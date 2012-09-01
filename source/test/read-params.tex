@@ -1,5 +1,5 @@
-% fontparams-test.tex
-% Copyright 2010 Philipp Stephani
+% read-params.tex
+% Copyright 2010, 2012 Philipp Stephani
 %
 % This work may be distributed and/or modified under the
 % conditions of the LaTeX Project Public License, either version 1.3c
@@ -15,18 +15,13 @@
 
 \documentclass{article}
 
-\usepackage{expl3}
+\usepackage{expl3}[2012/08/14]
 \usepackage{xstring}
 \usepackage{fontparams}
 
 \ExplSyntaxOn
 \luatex_if_engine:T {
   \usepackage { luaotfload }
-}
-\cs_new_eq:NN \clist_gset:Nn \tl_gset:Nn
-\cs_new_protected:Nn \clist_const:Nn {
-  \clist_new:N #1
-  \clist_gset:Nn #1 { #2 }
 }
 \tl_const:Nn \c_styles_tl {
   \displaystyle
@@ -99,12 +94,12 @@
 \chk_if_free_cs:N \l_params_font
 \luatex_if_engine:TF {
   \cs_new_protected_nopar:Nn \load_opentype_font:nn {
-    \font_set:Nnn \l_params_font { { file: #1 (#2) } } { 10pt }
+    \font \l_params_font = { file: #1 (#2) } at 10pt \scan_stop:
   }
 } {
   \xetex_if_engine:T {
     \cs_new_protected_nopar:Nn \load_opentype_font:nn {
-      \font_set:Nnn \l_params_font { "[ #1 ]" } { 10pt }
+      \font \l_params_font = "[ #1 ]" at 10pt \scan_stop:
     }
     \ActivateOpenTypeFontParameters
   }
@@ -125,13 +120,13 @@
 \cs_new_protected_nopar:Nn \write_param:nN {
   \clist_clear:N \l_params_line_clist
   \clist_put_right:Nn \l_params_line_clist { #1 }
-  \cs_if_exist:cTF { fontparams_font_get_ #1 :N } {
+  \cs_if_exist:cTF { __fontparams_font_get_ #1 :N } {
     \tl_set:Nx \l_params_value_tl { \the \FontParameter { #1 } { \l_params_font } }
     #2
   } {
     \clist_put_right:Nn \l_params_line_clist { }
   }
-  \cs_if_exist:cT { fontparams_style_get_ #1 :N } {
+  \cs_if_exist:cT { __fontparams_style_get_ #1 :N } {
     \tl_map_inline:Nn \c_styles_tl {
       \tl_set:Nx \l_params_value_tl { \the \FontParameterByStyle { #1 } { ##1 } }
       #2

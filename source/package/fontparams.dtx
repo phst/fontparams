@@ -56,11 +56,13 @@
 %
 %
 % \changes{v0.1}{2010/11/08}{Initial version}
+% \changes{v0.2}{2012/09/01}{Switched to \pkg{l3docstrip}}
 %
 % \GetFileInfo{fontparams.sty}
 %
-% \title{The \thispackage package\thanks{This document corresponds to \thispackage{}~\fileversion, dated~\filedate.}}
-% \author{Philipp Stephani \\ \mail{st_philipp@yahoo.de}}
+% \title{The \thispackage package\thanks{This document corresponds to
+% \thispackage{}~\fileversion, dated~\filedate.}}
+% \author{Philipp Stephani \\ \mail{p.stephani2@gmail.com}}
 % \date{\filedate}
 %
 % \appto\normalsize{^^A
@@ -89,7 +91,7 @@
 % basic knowledge about the general structure of \TeX-based typesetting
 % systems.  A very accessible introduction to terms like “engine” and “format”
 % may be found in the document
-% \textsf{lualatex-doc.pdf}\footnote{\url{http://ctan.org/tex-archive/info/luatex/lualatex-doc/lualatex-doc.pdf}}
+% \textsf{lualatex-doc.pdf}\footnote{\url{http://mirror.ctan.org/info/luatex/lualatex-doc/lualatex-doc.pdf}}
 % by \MPG, which is an interesting read even if you aren’t interested in
 % \hologo{LuaLaTeX}.
 %
@@ -153,9 +155,9 @@
 % The package supports the engines \hologo{pdfTeX}, \hologo{XeTeX} and
 % \hologo{LuaTeX}.  The package manual is contained in the file
 % \texttt{fontparams.pdf}.  Development versions are hosted on
-% GitHub\footnote{\url{http://github.com/phst/fontparams}}.  Please report all
+% GitHub\footnote{\url{https://github.com/phst/fontparams}}.  Please report all
 % issues at the issue
-% tracker\footnote{\url{http://github.com/phst/fontparams/issues}}.
+% tracker\footnote{\url{https://github.com/phst/fontparams/issues}}.
 %
 %
 % \section{Limitations}
@@ -611,9 +613,10 @@
 % We start by loading the \LaTeX3 packages and identifying ourselves.
 %    \begin{macrocode}
 %<*package>
+%<@@=fontparams>
 \NeedsTeXFormat{LaTeX2e}[2009/09/24]
-\RequirePackage{expl3}[2010/10/02]
-\ProvidesExplPackage{fontparams}{2011/05/02}{0.1}%
+\RequirePackage{expl3}[2012/08/14]
+\ProvidesExplPackage{fontparams}{2012/09/01}{0.2}%
   {Unified font parameter access}
 %    \end{macrocode}
 %
@@ -672,19 +675,36 @@
 %
 % \subsection{Common definitions}
 %
-% \begin{macro}{\fontparams_input:n}
-%   The macro \cmd{\fontparams_input:n}\marg{file name} saves the current
-%   category code regime on the stack, switches to default \LaTeXe\ category
-%   codes, and inputs the file specified by the \meta{file name}.
+% \begin{macro}{\l_@@_tmp_tl}
+%   A scratch token list.
 %    \begin{macrocode}
-\cs_new_protected_nopar:Npn \fontparams_input:n #1 {
-  \tl_set:Nx \ExplSyntaxStack { \ExplSyntaxStatus \ExplSyntaxStack }
+\tl_new:N \l_@@_tmp_tl
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\l_@@_stack_seq}
+%   The sequence variable |\l_@@_stack_seq| represents a stack containing the
+%   active syntax modes.
+%    \begin{macrocode}
+\seq_new:N \l_@@_stack_seq
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_input:n}
+%   The macro \cmd{\@@_input:n}\marg{file name} saves the current category code
+%   regime on the stack, switches to default \LaTeXe\ category codes, and
+%   inputs the file specified by the \meta{file name}.
+%   \changes{v0.2}{2012/09/01}{\Hologo{LaTeX3} kernel doesn't provide
+%   \cs{ExplSyntaxStack} any more}
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \@@_input:n #1 {
+  \seq_push:NV \l_@@_stack_seq \l__kernel_expl_bool
   \ExplSyntaxOff
   \file_input:n { #1 }
-  \tl_if_empty:NTF \ExplSyntaxStack {
-    \ExplSyntaxOff
+  \seq_pop:NNTF \l_@@_stack_seq \l_@@_tmp_tl {
+    \bool_set:Nn \l__kernel_expl_bool { \l_@@_tmp_tl }
   } {
-    \exp_last_unbraced:No \ExplSyntaxPopStack \ExplSyntaxStack \q_stop
+    \ExplSyntaxOff
   }
 }
 %    \end{macrocode}
@@ -692,7 +712,7 @@
 %
 % Now we load the auto-generated file of common definitions.
 %    \begin{macrocode}
-\fontparams_input:n { fontparams.def }
+\@@_input:n { fontparams.def }
 %    \end{macrocode}
 %
 % \subsection{\Hologo{LuaTeX} definitions}
@@ -704,11 +724,11 @@
   \RequireLuaModule { fontparams } [ 2010/12/21 ]
 %    \end{macrocode}
 %
-% \begin{macro}{\fontparams_undefine:N}
-%   The macro \cmd{\fontparams_undefine:N}\marg{control sequence} warns if the
+% \begin{macro}{\@@_undefine:N}
+%   The macro \cmd{\@@_undefine:N}\marg{control sequence} warns if the
 %   \term{control sequence} is already defined and then undefines it.
 %    \begin{macrocode}
-  \cs_new_protected_nopar:Npn \fontparams_undefine:N #1 {
+  \cs_new_protected_nopar:Npn \@@_undefine:N #1 {
     \cs_if_exist:NT #1 {
       \msg_warning:nnx { fontparams } { primitive-exists }
         { \token_to_str:N #1 }
@@ -726,9 +746,11 @@
 % Finally we load the \hologo{TeX} definitions and enable the additional
 % primitives.  The primitives will always be enabled because the definition
 % file undefines all of them.
+% \changes{v0.2}{2012/09/01}{Meaning of \cs{lua_now:x} changed in
+% \hologo{LaTeX3} kernel}
 %    \begin{macrocode}
-  \fontparams_input:n { fontparams-luatex.def }
-  \lua_now:x { fontparams.activate_primitives() }
+  \@@_input:n { fontparams-luatex.def }
+  \lua_now:n { fontparams.activate_primitives() }
 %    \end{macrocode}
 %
 % \subsection{Legacy definitions}
@@ -737,7 +759,7 @@
 % and \hologo{pdfTeX}.
 %    \begin{macrocode}
 } {
-  \fontparams_input:n { fontparams-legacy.def }
+  \@@_input:n { fontparams-legacy.def }
 %    \end{macrocode}
 %
 % \begin{macro}{\crampeddisplaystyle}
@@ -758,11 +780,11 @@
 % \end{macro}
 % \end{macro}
 %
-% \begin{macro}{\fontparams_abs:n}
-%   The macro \cmd{\fontparams_abs:n}\marg{dimen} expands to another
-%   \term{dimen} which is the absolute value of the passed \term{dimen}.
+% \begin{macro}{\@@_abs:n}
+%   The macro \cmd{\@@_abs:n}\marg{dimen} expands to another \term{dimen} which
+%   is the absolute value of the passed \term{dimen}.
 %    \begin{macrocode}
-  \cs_new_protected_nopar:Npn \fontparams_abs:n #1 {
+  \cs_new_protected_nopar:Npn \@@_abs:n #1 {
     \dimexpr
     \dim_compare:nNnT { #1 } < { \c_zero_dim } { - }
     \dimexpr #1 \relax
@@ -775,20 +797,20 @@
 % \hologo{XeTeX} so that legacy fonts use the correct definitions in
 % \hologo{XeTeX}.
 %    \begin{macrocode}
-  \fontparams_input:n { fontparams-pdftex.def }
+  \@@_input:n { fontparams-pdftex.def }
 %    \end{macrocode}
 %
-% \begin{macro}{\fontparams_load_xetex_def:}
-% \begin{macro}{\fontparams_load_pdftex_def:}
+% \begin{macro}{\@@_load_xetex_def:}
+% \begin{macro}{\@@_load_pdftex_def:}
 %   For \hologo{XeTeX} only we create two macros to switch between the
 %   definitions.
 %    \begin{macrocode}
   \xetex_if_engine:T {
-    \cs_new_protected_nopar:Npn \fontparams_load_xetex_def: {
-      \fontparams_input:n { fontparams-xetex.def }
+    \cs_new_protected_nopar:Npn \@@_load_xetex_def: {
+      \@@_input:n { fontparams-xetex.def }
     }
-    \cs_new_protected_nopar:Npn \fontparams_load_pdftex_def: {
-      \fontparams_input:n { fontparams-pdftex.def }
+    \cs_new_protected_nopar:Npn \@@_load_pdftex_def: {
+      \@@_input:n { fontparams-pdftex.def }
     }
   }
 }
@@ -805,10 +827,10 @@
 %    \begin{macrocode}
 \xetex_if_engine:T {
   \cs_new_protected_nopar:Npn \ActivateOpenTypeFontParameters {
-    \fontparams_load_xetex_def:
+    \@@_load_xetex_def:
   }
   \cs_new_protected_nopar:Npn \ActivateLegacyFontParameters {
-    \fontparams_load_pdftex_def:
+    \@@_load_pdftex_def:
   }
 }
 %    \end{macrocode}
@@ -821,8 +843,8 @@
 %   \meta{name} in the \term{font}.
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \FontParameter #1 #2 {
-  \cs_if_exist:cTF { fontparams_font_get_ #1 :N } {
-    \use:c { fontparams_font_get_ #1 :N } #2
+  \cs_if_exist:cTF { @@_font_get_ #1 :N } {
+    \use:c { @@_font_get_ #1 :N } #2
   } {
     \msg_error:nnx { fontparams } { unknown-param } { #1 }
   }
@@ -837,8 +859,8 @@
 %   of the parameter.
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \SetFontParameter #1 #2 #3 {
-  \cs_if_exist:cTF { fontparams_font_set_ #1 :Nn } {
-    \use:c { fontparams_font_set_ #1 :Nn } #2 { #3 }
+  \cs_if_exist:cTF { @@_font_set_ #1 :Nn } {
+    \use:c { @@_font_set_ #1 :Nn } #2 { #3 }
   } {
     \msg_error:nnx { fontparams } { unknown-param } { #1 }
   }
@@ -852,8 +874,8 @@
 %   parameter identified by \meta{name} in the \meta{style}.
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \FontParameterByStyle #1 #2 {
-  \cs_if_exist:cTF { fontparams_style_get_ #1 :N } {
-    \use:c { fontparams_style_get_ #1 :N } #2
+  \cs_if_exist:cTF { @@_style_get_ #1 :N } {
+    \use:c { @@_style_get_ #1 :N } #2
   } {
     \msg_error:nnx { fontparams } { unknown-param } { #1 }
   }
@@ -868,8 +890,8 @@
 %   the data type of the parameter.
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \SetFontParameterByStyle #1 #2 #3 {
-  \cs_if_exist:cTF { fontparams_style_set_ #1 :Nn } {
-    \use:c { fontparams_style_set_ #1 :Nn } #2 { #3 }
+  \cs_if_exist:cTF { @@_style_set_ #1 :Nn } {
+    \use:c { @@_style_set_ #1 :Nn } #2 { #3 }
   } {
     \msg_error:nnx { fontparams } { unknown-param } { #1 }
   }

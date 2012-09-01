@@ -1,7 +1,7 @@
 #!/usr/bin/env lua
 
 -- compile-pdftex.lua
--- Copyright 2010, 2011 Philipp Stephani
+-- Copyright 2010, 2011, 2012 Philipp Stephani
 --
 -- This work may be distributed and/or modified under the
 -- conditions of the LaTeX Project Public License, either version 1.3c
@@ -94,9 +94,9 @@ local function is_composite(elem)
 end
 
 local tpl_font_dimen = [[\fontdimen %s #1]]
-local tpl_font_dimen_abs = [[\fontparams_abs:n { \fontdimen %s #1 }]]
+local tpl_font_dimen_abs = [[\__fontparams_abs:n { \fontdimen %s #1 }]]
 local tpl_font_term = [[%.2f \fontdimen %s #1]]
-local tpl_font_term_abs = [[%.2f \fontparams_abs:n { \fontdimen %s #1 }]]
+local tpl_font_term_abs = [[%.2f \__fontparams_abs:n { \fontdimen %s #1 }]]
 
 local function format_font_term(term)
    if term.command then
@@ -164,10 +164,10 @@ local function format_font_set(name, def)
 end
 
 local tpl_font_macros = [[
-\cs_set_protected_nopar:Npn \fontparams_font_get_%s:N #1 {
+\cs_set_protected_nopar:Npn \__fontparams_font_get_%s:N #1 {
 %s
 }
-\cs_set_protected_nopar:Npn \fontparams_font_set_%s:Nn #1 #2 {
+\cs_set_protected_nopar:Npn \__fontparams_font_set_%s:Nn #1 #2 {
 %s
 }
 ]]
@@ -179,9 +179,9 @@ local function format_font_macros(name, def)
 end
 
 local tpl_style_dimen = [[\fontdimen %s \%sfont %s]]
-local tpl_style_dimen_abs = [[\fontparams_abs:n { \fontdimen %s \%sfont %s }]]
+local tpl_style_dimen_abs = [[\__fontparams_abs:n { \fontdimen %s \%sfont %s }]]
 local tpl_style_term = [[%.2f \fontdimen %s \%sfont %s]]
-local tpl_style_term_abs = [[%.2f \fontparams_abs:n { \fontdimen %s \%sfont %s }]]
+local tpl_style_term_abs = [[%.2f \__fontparams_abs:n { \fontdimen %s \%sfont %s }]]
 
 local families = {
    letters = 2,
@@ -289,10 +289,10 @@ local function format_style_set(name, comp, expr)
 end
 
 local tpl_style_macros = [[
-\cs_set_protected_nopar:Npn \fontparams_style_get_%s:N #1 {
+\cs_set_protected_nopar:Npn \__fontparams_style_get_%s:N #1 {
 %s
 }
-\cs_set_protected_nopar:Npn \fontparams_style_set_%s:Nn #1 #2 {
+\cs_set_protected_nopar:Npn \__fontparams_style_set_%s:Nn #1 #2 {
 %s
 }
 ]]
